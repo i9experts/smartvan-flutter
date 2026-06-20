@@ -4,48 +4,77 @@ import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import '../../../core/network/api_service.dart';
 
-class ForgotPasswordScreen extends ConsumerStatefulWidget {
-  const ForgotPasswordScreen({super.key});
+class ResetPasswordScreen extends ConsumerStatefulWidget {
+  final String email;
+  final String otp;
+  const ResetPasswordScreen({
+    super.key,
+    required this.email,
+    required this.otp,
+  });
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() =>
-      _ForgotPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
-  final _emailController = TextEditingController();
+class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  bool _obscurePassword = true;
+  bool _obscureConfirm = true;
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _sendOtp() async {
-    if (_emailController.text.isEmpty) {
-      _showError('Please enter your email address');
+  Future<void> _resetPassword() async {
+    if (_passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
+      _showError('Please fill in all fields');
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showError('Passwords do not match');
+      return;
+    }
+
+    if (_passwordController.text.length < 6) {
+      _showError('Password must be at least 6 characters');
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final response = await ApiService.post('/auth/forgot-password', {
-        'email': _emailController.text.trim(),
+      final response = await ApiService.post('/auth/reset-password', {
+        'email': widget.email,
+        'otp': widget.otp,
+        'password': _passwordController.text,
       });
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (mounted) {
-          context.go('/otp', extra: {
-            'phone': _emailController.text.trim(),
-            'isRegistration': false,
-          });
+          context.go('/login');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Password reset successful! Please login.'),
+              backgroundColor: const Color(0xFF27AE60),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          );
         }
       }
     } on DioException catch (e) {
       final message =
-          e.response?.data?['message'] ?? 'Failed to send OTP. Try again.';
+          e.response?.data?['message'] ?? 'Reset failed. Try again.';
       _showError(message.toString());
     } catch (e) {
       _showError('Something went wrong. Please try again.');
@@ -80,7 +109,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           bottom: false,
           child: Column(
             children: [
-              // Top bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
@@ -90,7 +118,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       onPressed: () => context.go('/login'),
                     ),
                     const Text(
-                      'Forgot Password',
+                      'Reset Password',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -102,7 +130,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              // Lock icon
               Container(
                 width: 90,
                 height: 90,
@@ -111,14 +138,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.lock_reset_outlined,
+                  Icons.lock_outlined,
                   size: 45,
                   color: Colors.white,
                 ),
               ),
               const SizedBox(height: 16),
               const Text(
-                'Reset Password',
+                'Create New Password',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 22,
@@ -128,7 +155,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Enter your email to receive\na password reset OTP',
+                'Your new password must be\ndifferent from the previous one',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white70,
@@ -137,7 +164,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              // Bottom card
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
@@ -154,7 +180,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       children: [
                         const SizedBox(height: 16),
                         const Text(
-                          'Email Address',
+                          'New Password',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -164,18 +190,82 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         ),
                         const SizedBox(height: 8),
                         TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
                           decoration: InputDecoration(
-                            hintText: 'Enter your registered email',
+                            hintText: 'Enter new password',
                             hintStyle: const TextStyle(
                               color: Color(0xFF8A94A6),
                               fontSize: 14,
                               fontFamily: 'Poppins',
                             ),
                             prefixIcon: const Icon(
-                              Icons.email_outlined,
+                              Icons.lock_outlined,
                               color: Color(0xFF1B2B6B),
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: const Color(0xFF8A94A6),
+                              ),
+                              onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword),
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFEAECF0)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFEAECF0)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                  color: Color(0xFF1B2B6B), width: 2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Confirm Password',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1A2E),
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _confirmPasswordController,
+                          obscureText: _obscureConfirm,
+                          decoration: InputDecoration(
+                            hintText: 'Confirm new password',
+                            hintStyle: const TextStyle(
+                              color: Color(0xFF8A94A6),
+                              fontSize: 14,
+                              fontFamily: 'Poppins',
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.lock_outlined,
+                              color: Color(0xFF1B2B6B),
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirm
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: const Color(0xFF8A94A6),
+                              ),
+                              onPressed: () => setState(
+                                  () => _obscureConfirm = !_obscureConfirm),
                             ),
                             filled: true,
                             fillColor: Colors.white,
@@ -197,12 +287,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        // Send OTP Button
                         SizedBox(
                           width: double.infinity,
                           height: 52,
                           child: ElevatedButton(
-                            onPressed: _isLoading ? null : _sendOtp,
+                            onPressed: _isLoading ? null : _resetPassword,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF1B2B6B),
                               foregroundColor: Colors.white,
@@ -220,7 +309,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                     ),
                                   )
                                 : const Text(
-                                    'Send Reset OTP',
+                                    'Reset Password',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -229,63 +318,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 24),
-                        // Info box
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1B2B6B).withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.info_outline,
-                                color: Color(0xFF1B2B6B),
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              const Expanded(
-                                child: Text(
-                                  'We will send a 6-digit OTP to your registered email address. Please check your inbox.',
-                                  style: TextStyle(
-                                    color: Color(0xFF1B2B6B),
-                                    fontSize: 12,
-                                    fontFamily: 'Poppins',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Back to login
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Remember your password? ',
-                              style: TextStyle(
-                                color: Color(0xFF8A94A6),
-                                fontSize: 14,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => context.go('/login'),
-                              child: const Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  color: Color(0xFF1B2B6B),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
                       ],
                     ),
                   ),

@@ -24,7 +24,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   bool _isLoading = false;
   bool _isResending = false;
   int _resendSeconds = 60;
-  late final Stream<int> _timerStream;
 
   @override
   void initState() {
@@ -72,7 +71,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               ),
             );
           } else {
-            context.go('/login');
+            context.go('/reset-password', extra: {
+              'email': widget.phone,
+            });
           }
         }
       }
@@ -92,7 +93,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
     try {
       await ApiService.post('/auth/resend-otp', {
-        'phone': widget.phone,
+        'email': widget.phone,
       });
 
       setState(() => _resendSeconds = 60);
@@ -104,8 +105,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
             content: const Text('OTP resent successfully!'),
             backgroundColor: const Color(0xFF27AE60),
             behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
           ),
         );
       }
@@ -142,14 +143,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           bottom: false,
           child: Column(
             children: [
-              // Top bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios,
-                          color: Colors.white),
+                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
                       onPressed: () => context.go('/register'),
                     ),
                     const Text(
@@ -165,7 +164,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Icon
               Container(
                 width: 80,
                 height: 80,
@@ -200,7 +198,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              // Bottom card
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
@@ -215,7 +212,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                     child: Column(
                       children: [
                         const SizedBox(height: 24),
-                        // OTP Fields
                         PinCodeTextField(
                           appContext: context,
                           length: 6,
@@ -244,7 +240,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        // Verify Button
                         SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -277,7 +272,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        // Resend OTP
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -317,22 +311,21 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           ],
                         ),
                         const SizedBox(height: 32),
-                        // Info box
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: const Color(0xFF1B2B6B).withOpacity(0.08),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
+                          child: const Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.info_outline,
                                 color: Color(0xFF1B2B6B),
                                 size: 20,
                               ),
-                              const SizedBox(width: 12),
-                              const Expanded(
+                              SizedBox(width: 12),
+                              Expanded(
                                 child: Text(
                                   'The OTP is valid for 10 minutes. Please do not share it with anyone.',
                                   style: TextStyle(
