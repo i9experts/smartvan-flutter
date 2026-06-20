@@ -67,7 +67,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (mounted) {
           context.go('/otp', extra: {
-            'phone': _phoneController.text.trim(),
+            'phone': _emailController.text.trim(),
             'isRegistration': true,
           });
         }
