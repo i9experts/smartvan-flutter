@@ -25,7 +25,6 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
       final response = await ApiService.get('/kid/getKids');
       if (response.statusCode == 200) {
         final raw = response.data;
-        // Backend returns { message, data: [...] }
         final data = raw['data'] ?? raw;
         setState(() => _kids = data is List ? data : []);
       }
@@ -41,7 +40,6 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
       backgroundColor: const Color(0xFFF5F6FA),
       body: Column(
         children: [
-          // Header
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -97,8 +95,6 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
               ),
             ),
           ),
-
-          // Body
           Expanded(
             child: _isLoading
                 ? const Center(
@@ -136,11 +132,8 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
               color: const Color(0xFF1B2B6B).withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.child_care,
-              size: 50,
-              color: Color(0xFF1B2B6B),
-            ),
+            child: const Icon(Icons.child_care, size: 50,
+                color: Color(0xFF1B2B6B)),
           ),
           const SizedBox(height: 24),
           const Text(
@@ -166,21 +159,15 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
           ElevatedButton.icon(
             onPressed: () => context.go('/add-kid'),
             icon: const Icon(Icons.add),
-            label: const Text(
-              'Add Your First Kid',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            label: const Text('Add Your First Kid',
+                style: TextStyle(
+                    fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1B2B6B),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 24, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
         ],
@@ -189,16 +176,16 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
   }
 
   Widget _buildKidCard(Map<String, dynamic> kid) {
-    // Correct field names from backend
-    final String name = kid['fullname'] ?? kid['name'] ?? kid['kidName'] ?? 'Unknown';
+    final String name =
+        kid['fullname'] ?? kid['name'] ?? kid['kidName'] ?? 'Unknown';
     final String grade = kid['grade']?.toString() ?? 'N/A';
-    final String schoolName = kid['school']?['schoolName'] ?? 
-                          kid['schoolName'] ?? 'N/A';
+    final String schoolName =
+        kid['school']?['schoolName'] ?? kid['schoolName'] ?? 'N/A';
     final String? image = kid['image'] ?? kid['profileImage'];
     final String status = kid['status'] ?? 'pending';
     final bool isActive = status.toLowerCase() == 'active';
-    final String vanNumber = kid['van']?['carNumber'] ?? 
-                             kid['van']?['vanNumber'] ?? 'Not assigned';
+    final String vanNumber =
+        kid['van']?['carNumber'] ?? kid['van']?['vanNumber'] ?? 'Not assigned';
     final String driverName = kid['driver']?['fullname'] ?? 'Not assigned';
 
     return Container(
@@ -216,12 +203,10 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
       ),
       child: Column(
         children: [
-          // Top section
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Kid Avatar
                 Container(
                   width: 64,
                   height: 64,
@@ -234,30 +219,24 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   ),
                   child: ClipOval(
                     child: image != null
-                        ? Image.network(
-                            image,
-                            fit: BoxFit.cover,
+                        ? Image.network(image, fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) =>
-                                _buildAvatarFallback(name),
-                          )
+                                _buildAvatarFallback(name))
                         : _buildAvatarFallback(name),
                   ),
                 ),
                 const SizedBox(width: 16),
-                // Kid Info
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A2E),
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
+                      Text(name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1A1A2E),
+                            fontFamily: 'Poppins',
+                          )),
                       const SizedBox(height: 4),
                       Row(
                         children: [
@@ -265,16 +244,14 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                               size: 14, color: Color(0xFF8A94A6)),
                           const SizedBox(width: 4),
                           Expanded(
-                            child: Text(
-                              schoolName,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF8A94A6),
-                                fontFamily: 'Poppins',
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            child: Text(schoolName,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF8A94A6),
+                                  fontFamily: 'Poppins',
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis),
                           ),
                         ],
                       ),
@@ -284,23 +261,20 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                           const Icon(Icons.class_outlined,
                               size: 14, color: Color(0xFF8A94A6)),
                           const SizedBox(width: 4),
-                          Text(
-                            'Grade: $grade',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF8A94A6),
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
+                          Text('Grade: $grade',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF8A94A6),
+                                fontFamily: 'Poppins',
+                              )),
                         ],
                       ),
                     ],
                   ),
                 ),
-                // Status Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: isActive
                         ? const Color(0xFF27AE60).withOpacity(0.1)
@@ -322,8 +296,6 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
               ],
             ),
           ),
-
-          // Van & Driver Info
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(12),
@@ -340,16 +312,14 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                           size: 16, color: Color(0xFF1B2B6B)),
                       const SizedBox(width: 6),
                       Expanded(
-                        child: Text(
-                          'Van: $vanNumber',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF1A1A2E),
-                            fontFamily: 'Poppins',
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text('Van: $vanNumber',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF1A1A2E),
+                              fontFamily: 'Poppins',
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis),
                       ),
                     ],
                   ),
@@ -361,16 +331,14 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                           size: 16, color: Color(0xFF1B2B6B)),
                       const SizedBox(width: 6),
                       Expanded(
-                        child: Text(
-                          'Driver: $driverName',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF1A1A2E),
-                            fontFamily: 'Poppins',
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text('Driver: $driverName',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF1A1A2E),
+                              fontFamily: 'Poppins',
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis),
                       ),
                     ],
                   ),
@@ -379,11 +347,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
             ),
           ),
           const SizedBox(height: 8),
-
-          // Divider
           const Divider(height: 1, color: Color(0xFFEAECF0)),
-
-          // Bottom Actions
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Row(
@@ -392,19 +356,19 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   icon: Icons.map_outlined,
                   label: 'Track',
                   color: const Color(0xFF1B2B6B),
-                  onTap: () {},
+                  onTap: () => context.go('/tracking'),
                 ),
                 _buildActionButton(
                   icon: Icons.history,
                   label: 'History',
                   color: const Color(0xFF8A94A6),
-                  onTap: () {},
+                  onTap: () => _showTripHistory(kid),
                 ),
                 _buildActionButton(
                   icon: Icons.edit_outlined,
                   label: 'Edit',
                   color: const Color(0xFFFFB800),
-                  onTap: () {},
+                  onTap: () => _showEditKid(kid),
                 ),
                 _buildActionButton(
                   icon: Icons.delete_outline,
@@ -469,50 +433,250 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
     );
   }
 
-  Future<void> _confirmDelete(Map<String, dynamic> kid) async {
-    final confirmed = await showDialog<bool>(
+  void _showTripHistory(Map<String, dynamic> kid) {
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: const Text(
-          'Remove Kid',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
           ),
         ),
-        content: Text(
-          'Are you sure you want to remove ${kid['name'] ?? 'this kid'}?',
-          style: const TextStyle(fontFamily: 'Poppins'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancel',
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEAECF0),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Trip History - ${kid['fullname'] ?? 'Kid'}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1A2E),
+                fontFamily: 'Poppins',
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Icon(Icons.history, size: 48, color: Color(0xFF8A94A6)),
+            const SizedBox(height: 12),
+            const Text(
+              'Trip history coming soon!',
               style: TextStyle(
+                fontSize: 14,
                 color: Color(0xFF8A94A6),
                 fontFamily: 'Poppins',
               ),
             ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditKid(Map<String, dynamic> kid) {
+    final nameController =
+        TextEditingController(text: kid['fullname'] ?? '');
+    final gradeController =
+        TextEditingController(text: kid['grade']?.toString() ?? '');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAECF0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Edit Kid',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1A2E),
+                  fontFamily: 'Poppins',
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text('Full Name',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A2E),
+                    fontFamily: 'Poppins',
+                  )),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  hintText: 'Enter full name',
+                  filled: true,
+                  fillColor: const Color(0xFFF5F6FA),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFEAECF0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFEAECF0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                        color: Color(0xFF1B2B6B), width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Grade',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A2E),
+                    fontFamily: 'Poppins',
+                  )),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: gradeController,
+                decoration: InputDecoration(
+                  hintText: 'Enter grade',
+                  filled: true,
+                  fillColor: const Color(0xFFF5F6FA),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFEAECF0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFEAECF0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                        color: Color(0xFF1B2B6B), width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      final kidId = kid['_id'] ?? kid['id'];
+                      await ApiService.post('/kid/update-kid', {
+                        'kidId': kidId,
+                        'fullname': nameController.text.trim(),
+                        'grade': gradeController.text.trim(),
+                      });
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Kid updated successfully!'),
+                            backgroundColor: Color(0xFF27AE60),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        _loadKids();
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Failed to update kid'),
+                            backgroundColor: Color(0xFFFF4B4B),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1B2B6B),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Save Changes',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Poppins',
+                      )),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(Map<String, dynamic> kid) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Remove Kid',
+            style: TextStyle(
+                fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+        content: Text(
+            'Are you sure you want to remove ${kid['fullname'] ?? 'this kid'}?',
+            style: const TextStyle(fontFamily: 'Poppins')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel',
+                style: TextStyle(
+                    color: Color(0xFF8A94A6), fontFamily: 'Poppins')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF4B4B),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+                  borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text(
-              'Remove',
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'Poppins',
-              ),
-            ),
+            child: const Text('Remove',
+                style:
+                    TextStyle(color: Colors.white, fontFamily: 'Poppins')),
           ),
         ],
       ),
