@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
+import '../../alerts/screens/alerts_screen.dart';
+import '../../kids/screens/kids_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -841,31 +843,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildKidsPlaceholder() {
-    return const Center(
-      child: Text(
-        'Kids Screen\nComing Soon',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 18,
-          color: Color(0xFF1B2B6B),
-          fontFamily: 'Poppins',
-        ),
-      ),
-    );
+    return const KidsScreen();
   }
 
   Widget _buildAlertsPlaceholder() {
-    return const Center(
-      child: Text(
-        'Alerts Screen\nComing Soon',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 18,
-          color: Color(0xFF1B2B6B),
-          fontFamily: 'Poppins',
-        ),
-      ),
-    );
+    return const AlertsScreen();
   }
 
   Widget _buildProfilePlaceholder() {
