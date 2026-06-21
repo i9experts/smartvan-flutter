@@ -24,8 +24,10 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
     try {
       final response = await ApiService.get('/kid/getKids');
       if (response.statusCode == 200) {
-        final data = response.data;
-        setState(() => _kids = data is List ? data : (data['kids'] ?? []));
+        final raw = response.data;
+        // Backend returns { message, data: [...] }
+        final data = raw['data'] ?? raw;
+        setState(() => _kids = data is List ? data : []);
       }
     } catch (e) {
     } finally {
@@ -187,12 +189,17 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
   }
 
   Widget _buildKidCard(Map<String, dynamic> kid) {
-    final String name = kid['name'] ?? 'Unknown';
-    final String grade = kid['grade'] ?? kid['class'] ?? 'N/A';
-    final String school = kid['schoolName'] ?? kid['school'] ?? 'N/A';
+    // Correct field names from backend
+    final String name = kid['fullname'] ?? kid['name'] ?? kid['kidName'] ?? 'Unknown';
+    final String grade = kid['grade']?.toString() ?? 'N/A';
+    final String schoolName = kid['school']?['schoolName'] ?? 
+                          kid['schoolName'] ?? 'N/A';
     final String? image = kid['image'] ?? kid['profileImage'];
-    final String status = kid['status'] ?? 'active';
+    final String status = kid['status'] ?? 'pending';
     final bool isActive = status.toLowerCase() == 'active';
+    final String vanNumber = kid['van']?['carNumber'] ?? 
+                             kid['van']?['vanNumber'] ?? 'Not assigned';
+    final String driverName = kid['driver']?['fullname'] ?? 'Not assigned';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -259,7 +266,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              school,
+                              schoolName,
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFF8A94A6),
@@ -297,17 +304,17 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   decoration: BoxDecoration(
                     color: isActive
                         ? const Color(0xFF27AE60).withOpacity(0.1)
-                        : const Color(0xFFFF4B4B).withOpacity(0.1),
+                        : const Color(0xFFFFB800).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    isActive ? 'Active' : 'Inactive',
+                    isActive ? 'Active' : 'Pending',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: isActive
                           ? const Color(0xFF27AE60)
-                          : const Color(0xFFFF4B4B),
+                          : const Color(0xFFFFB800),
                       fontFamily: 'Poppins',
                     ),
                   ),
@@ -315,6 +322,63 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
               ],
             ),
           ),
+
+          // Van & Driver Info
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F6FA),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.directions_bus,
+                          size: 16, color: Color(0xFF1B2B6B)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Van: $vanNumber',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF1A1A2E),
+                            fontFamily: 'Poppins',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.person_outlined,
+                          size: 16, color: Color(0xFF1B2B6B)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Driver: $driverName',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF1A1A2E),
+                            fontFamily: 'Poppins',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
 
           // Divider
           const Divider(height: 1, color: Color(0xFFEAECF0)),
@@ -420,7 +484,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
           ),
         ),
         content: Text(
-          'Are you sure you want to remove ${kid['name']}?',
+          'Are you sure you want to remove ${kid['name'] ?? 'this kid'}?',
           style: const TextStyle(fontFamily: 'Poppins'),
         ),
         actions: [
@@ -455,14 +519,30 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
     );
 
     if (confirmed == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Kid removed successfully'),
-          backgroundColor: Color(0xFF27AE60),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      _loadKids();
+      try {
+        final kidId = kid['_id'] ?? kid['id'];
+        await ApiService.post('/kid/deleteKidByParent', {'kidId': kidId});
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Kid removed successfully'),
+              backgroundColor: Color(0xFF27AE60),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          _loadKids();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to remove kid'),
+              backgroundColor: Color(0xFFFF4B4B),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
     }
   }
 }

@@ -42,19 +42,19 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
   }
 
   Future<void> _loadSchools() async {
-    setState(() => _isLoadingSchools = true);
-    try {
-      final response = await ApiService.get('/school/getSchools');
-      if (response.statusCode == 200) {
-        final data = response.data;
-        setState(
-            () => _schools = data is List ? data : (data['schools'] ?? []));
-      }
-    } catch (e) {
-    } finally {
-      if (mounted) setState(() => _isLoadingSchools = false);
+  setState(() => _isLoadingSchools = true);
+  try {
+    final response = await ApiService.get('/school/getAllSchools');
+    if (response.statusCode == 200) {
+      final data = response.data;
+      final schools = data is List ? data : (data['data'] ?? data['schools'] ?? []);
+      setState(() => _schools = schools);
     }
+  } catch (e) {
+  } finally {
+    if (mounted) setState(() => _isLoadingSchools = false);
   }
+}
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -85,18 +85,17 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
 
     try {
       final formData = FormData.fromMap({
-        'name': _nameController.text.trim(),
+        'fullname': _nameController.text.trim(),
         'schoolId': _selectedSchoolId,
         'grade': _gradeController.text.trim(),
         'age': _ageController.text.trim(),
         'gender': _selectedGender,
-        'address': _addressController.text.trim(),
         if (_selectedImage != null)
           'image': await MultipartFile.fromFile(
-            _selectedImage!.path,
-            filename: 'kid_image.jpg',
+             _selectedImage!.path,
+             filename: 'kid_image.jpg',
           ),
-      });
+  });
 
       final dio = Dio();
       final prefs =
