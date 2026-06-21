@@ -7,6 +7,7 @@ import '../../../core/network/api_service.dart';
 import '../../alerts/screens/alerts_screen.dart';
 import '../../kids/screens/kids_screen.dart';
 import '../../profile/screens/profile_screen.dart';
+import '../../tracking/screens/tracking_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -90,7 +91,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case 0:
         return _buildHome();
       case 1:
-        return _buildTrackingPlaceholder();
+        return const TrackingScreen();
       case 2:
         return const KidsScreen();
       case 3:
@@ -814,20 +815,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildTrackingPlaceholder() {
-    return const Center(
-      child: Text(
-        'Live Tracking\nComing Soon',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 18,
-          color: Color(0xFF1B2B6B),
-          fontFamily: 'Poppins',
-        ),
-      ),
     );
   }
 
