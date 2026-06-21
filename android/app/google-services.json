@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1078407159783",
+    "project_id": "smartvan-9e8dc",
+    "storage_bucket": "smartvan-9e8dc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1078407159783:android:413f37963c447503422742",
+        "android_client_info": {
+          "package_name": "com.smartvan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3JD2YvbNslUoh_o4pjzWK-gJHCTqmcBc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
