@@ -6,6 +6,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
 import '../../alerts/screens/alerts_screen.dart';
 import '../../kids/screens/kids_screen.dart';
+import '../../profile/screens/profile_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -91,11 +92,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case 1:
         return _buildTrackingPlaceholder();
       case 2:
-        return _buildKidsPlaceholder();
+        return const KidsScreen();
       case 3:
-        return _buildAlertsPlaceholder();
+        return const AlertsScreen();
       case 4:
-        return _buildProfilePlaceholder();
+        return const ProfileScreen();
       default:
         return _buildHome();
     }
@@ -136,7 +137,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           children: [
                             Row(
                               children: [
-                                // Profile Picture
                                 Container(
                                   width: 48,
                                   height: 48,
@@ -242,15 +242,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Active Trip Banner
                   _buildActiveTripBanner(),
                   const SizedBox(height: 24),
-
-                  // Advertisement Banner
                   _buildAdBanner(),
                   const SizedBox(height: 24),
-
-                  // Quick Actions
                   const Text(
                     'Quick Actions',
                     style: TextStyle(
@@ -263,8 +258,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 12),
                   _buildQuickActions(),
                   const SizedBox(height: 24),
-
-                  // My Kids
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -293,8 +286,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 12),
                   _buildKidsSection(),
                   const SizedBox(height: 24),
-
-                  // Recent Alerts
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -645,9 +636,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFF1B2B6B),
-                  ),
+                  border: Border.all(color: const Color(0xFF1B2B6B)),
                 ),
                 child: const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -832,28 +821,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return const Center(
       child: Text(
         'Live Tracking\nComing Soon',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 18,
-          color: Color(0xFF1B2B6B),
-          fontFamily: 'Poppins',
-        ),
-      ),
-    );
-  }
-
-  Widget _buildKidsPlaceholder() {
-    return const KidsScreen();
-  }
-
-  Widget _buildAlertsPlaceholder() {
-    return const AlertsScreen();
-  }
-
-  Widget _buildProfilePlaceholder() {
-    return const Center(
-      child: Text(
-        'Profile Screen\nComing Soon',
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 18,

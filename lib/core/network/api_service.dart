@@ -39,6 +39,11 @@ class ApiService {
     return await _dio.put(path, data: data);
   }
 
+  static Future<Response> patch(String path, Map<String, dynamic> data) async {
+    await _addAuthHeader();
+    return await _dio.patch(path, data: data);
+  }
+
   static Future<Response> delete(String path) async {
     await _addAuthHeader();
     return await _dio.delete(path);
