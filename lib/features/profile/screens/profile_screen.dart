@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
@@ -19,6 +20,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isLoading = true;
   bool _isEditing = false;
   bool _isSaving = false;
+  bool _notificationsEnabled = true;
+  bool _locationEnabled = true;
   File? _selectedImage;
 
   final _nameController = TextEditingController();
@@ -76,9 +79,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _showError('Name cannot be empty');
       return;
     }
-
     setState(() => _isSaving = true);
-
     try {
       final response = await ApiService.post('/van/update-profile', {
         'name': _nameController.text.trim(),
@@ -86,20 +87,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         'address': _addressController.text.trim(),
         'userType': 'parent',
       });
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         await _loadProfile();
         setState(() => _isEditing = false);
-        if (mounted) {
-          _showSuccess('Profile updated successfully!');
-        }
+        if (mounted) _showSuccess('Profile updated successfully!');
       }
     } catch (e) {
-      if (mounted) {
-        _showError('Failed to update profile. Please try again.');
-      }
+      if (mounted) _showError('Failed to update profile. Please try again.');
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        _showError('Could not open link');
+      }
     }
   }
 
@@ -617,7 +624,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             label: 'Push Notifications',
             color: const Color(0xFF1B2B6B),
             hasSwitch: true,
-            value: true,
+            value: _notificationsEnabled,
+            onSwitch: (val) => setState(() => _notificationsEnabled = val),
           ),
           const Divider(height: 1, color: Color(0xFFEAECF0)),
           _buildSettingsItem(
@@ -625,7 +633,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             label: 'Location Access',
             color: const Color(0xFF27AE60),
             hasSwitch: true,
-            value: true,
+            value: _locationEnabled,
+            onSwitch: (val) => setState(() => _locationEnabled = val),
           ),
           const Divider(height: 1, color: Color(0xFFEAECF0)),
           _buildSettingsItem(
@@ -633,6 +642,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             label: 'Privacy Policy',
             color: const Color(0xFF8A94A6),
             hasArrow: true,
+            onTap: () =>
+                _launchUrl('https://smartvanride.com/privacy-policy'),
           ),
           const Divider(height: 1, color: Color(0xFFEAECF0)),
           _buildSettingsItem(
@@ -640,6 +651,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             label: 'Help & Support',
             color: const Color(0xFFFFB800),
             hasArrow: true,
+            onTap: () => _launchUrl('https://smartvanride.com/support'),
           ),
           const Divider(height: 1, color: Color(0xFFEAECF0)),
           _buildSettingsItem(
@@ -659,41 +671,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     bool hasSwitch = false,
     bool hasArrow = false,
     bool value = false,
+    VoidCallback? onTap,
+    Function(bool)? onSwitch,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 18),
             ),
-            child: Icon(icon, color: color, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF1A1A2E),
-                fontFamily: 'Poppins',
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF1A1A2E),
+                  fontFamily: 'Poppins',
+                ),
               ),
             ),
-          ),
-          if (hasSwitch)
-            Switch(
-              value: value,
-              onChanged: (_) {},
-              activeColor: const Color(0xFF1B2B6B),
-            ),
-          if (hasArrow)
-            const Icon(Icons.arrow_forward_ios,
-                size: 14, color: Color(0xFF8A94A6)),
-        ],
+            if (hasSwitch)
+              Switch(
+                value: value,
+                onChanged: onSwitch,
+                activeColor: const Color(0xFF1B2B6B),
+              ),
+            if (hasArrow)
+              const Icon(Icons.arrow_forward_ios,
+                  size: 14, color: Color(0xFF8A94A6)),
+          ],
+        ),
       ),
     );
   }
