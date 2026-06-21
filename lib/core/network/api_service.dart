@@ -12,6 +12,10 @@ class ApiService {
     ),
   );
 
+  static Future<SharedPreferences> getPrefs() async {
+    return await SharedPreferences.getInstance();
+  }
+
   static Future<void> _addAuthHeader() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(AppConstants.tokenKey);
