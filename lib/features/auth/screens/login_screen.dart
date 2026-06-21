@@ -91,16 +91,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             children: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24, vertical: 32),
                 child: Column(
                   children: [
+                    // Logo in white circle with ClipOval
                     Container(
-                      width: 80,
-                      height: 80,
+                      width: 100,
+                      height: 100,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
+                        shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.2),
@@ -109,10 +110,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.directions_bus,
-                        size: 45,
-                        color: Color(0xFF1B2B6B),
+                      child: ClipOval(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -127,7 +132,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Safe School Transportation',
+                      'Safe Ride, Every Side',
                       style: TextStyle(
                         color: Colors.white70,
                         fontSize: 13,
@@ -321,8 +326,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             const Expanded(
                                 child: Divider(color: Color(0xFFEAECF0))),
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16),
                               child: Text(
                                 'OR',
                                 style: TextStyle(
@@ -379,7 +384,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('QR Code login coming soon!'),
+                                  content:
+                                      Text('QR Code login coming soon!'),
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );
