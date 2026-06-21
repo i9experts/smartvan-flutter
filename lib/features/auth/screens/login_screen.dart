@@ -43,13 +43,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
-        final token = data['token'] ?? data['access_token'] ?? '';
+        final token = data['data']?['token'] ??
+            data['token'] ??
+            data['access_token'] ??
+            '';
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(AppConstants.tokenKey, token);
+        await prefs.setString('user_type', 'parent');
         if (mounted) context.go('/home');
       }
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] ?? 'Login failed. Please try again.';
+      final message =
+          e.response?.data?['message'] ?? 'Login failed. Please try again.';
       _showError(message.toString());
     } catch (e) {
       _showError('Something went wrong. Please try again.');
@@ -64,7 +69,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         content: Text(message),
         backgroundColor: const Color(0xFFFF4B4B),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -84,9 +90,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           bottom: false,
           child: Column(
             children: [
-              // Top section with logo
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 child: Column(
                   children: [
                     Container(
@@ -131,7 +137,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                 ),
               ),
-              // Bottom white card
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
@@ -166,7 +171,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 28),
-                        // Email Field
                         const Text(
                           'Email Address',
                           style: TextStyle(
@@ -195,23 +199,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFEAECF0)),
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFEAECF0)),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFEAECF0)),
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFEAECF0)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
-                                color: Color(0xFF1B2B6B),
-                                width: 2,
-                              ),
+                                  color: Color(0xFF1B2B6B), width: 2),
                             ),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // Password Field
                         const Text(
                           'Password',
                           style: TextStyle(
@@ -243,29 +246,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     : Icons.visibility_outlined,
                                 color: const Color(0xFF8A94A6),
                               ),
-                              onPressed: () => setState(
-                                  () => _obscurePassword = !_obscurePassword),
+                              onPressed: () => setState(() =>
+                                  _obscurePassword = !_obscurePassword),
                             ),
                             filled: true,
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFEAECF0)),
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFEAECF0)),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFEAECF0)),
+                              borderSide: const BorderSide(
+                                  color: Color(0xFFEAECF0)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
-                                color: Color(0xFF1B2B6B),
-                                width: 2,
-                              ),
+                                  color: Color(0xFF1B2B6B), width: 2),
                             ),
                           ),
                         ),
-                        // Forgot Password
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
@@ -282,7 +284,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        // Login Button
                         SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -315,12 +316,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        // Divider
                         Row(
                           children: [
-                            const Expanded(child: Divider(color: Color(0xFFEAECF0))),
+                            const Expanded(
+                                child: Divider(color: Color(0xFFEAECF0))),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
                                 'OR',
                                 style: TextStyle(
@@ -330,11 +332,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                             ),
-                            const Expanded(child: Divider(color: Color(0xFFEAECF0))),
+                            const Expanded(
+                                child: Divider(color: Color(0xFFEAECF0))),
                           ],
                         ),
                         const SizedBox(height: 24),
-                        // Google Sign In Button
                         SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -342,7 +344,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Google Sign In coming soon!'),
+                                  content:
+                                      Text('Google Sign In coming soon!'),
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );
@@ -360,7 +363,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                             style: OutlinedButton.styleFrom(
                               backgroundColor: Colors.white,
-                              side: const BorderSide(color: Color(0xFFEAECF0)),
+                              side: const BorderSide(
+                                  color: Color(0xFFEAECF0)),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -368,7 +372,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // QR Code Button
                         SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -394,7 +397,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                             style: OutlinedButton.styleFrom(
                               backgroundColor: Colors.white,
-                              side: const BorderSide(color: Color(0xFFEAECF0)),
+                              side: const BorderSide(
+                                  color: Color(0xFFEAECF0)),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -402,7 +406,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        // Register Link
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

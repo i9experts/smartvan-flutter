@@ -45,23 +45,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
-    try {
-      final response = await ApiService.get('/auth/getProfile');
-      if (response.statusCode == 200) {
-        final data = response.data;
-        setState(() {
-          _profile = data;
-          _nameController.text = data['name'] ?? '';
-          _emailController.text = data['email'] ?? '';
-          _phoneController.text = data['phone'] ?? '';
-          _addressController.text = data['address'] ?? '';
-        });
-      }
-    } catch (e) {
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+  try {
+    final response = await ApiService.get('/auth/getProfile');
+    if (response.statusCode == 200) {
+      // Backend may return data directly or nested in data.data
+      final raw = response.data;
+      final data = raw['data'] ?? raw;
+      setState(() {
+        _profile = data;
+        _nameController.text = data['fullname'] ?? data['name'] ?? '';
+        _emailController.text = data['email'] ?? '';
+        _phoneController.text = data['phoneNo'] ?? data['phone'] ?? '';
+        _addressController.text = data['address'] ?? '';
+      });
     }
+  } catch (e) {
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
   }
+}
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -75,30 +77,52 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
-    if (_nameController.text.isEmpty) {
-      _showError('Name cannot be empty');
-      return;
-    }
-    setState(() => _isSaving = true);
-    try {
-      final response = await ApiService.post('/van/update-profile', {
-        'name': _nameController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'address': _addressController.text.trim(),
-        'userType': 'parent',
-      });
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        await _loadProfile();
-        setState(() => _isEditing = false);
-        if (mounted) _showSuccess('Profile updated successfully!');
-      }
-    } catch (e) {
-      if (mounted) _showError('Failed to update profile. Please try again.');
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
+  if (_nameController.text.isEmpty) {
+    _showError('Name cannot be empty');
+    return;
   }
+  setState(() => _isSaving = true);
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final userType = prefs.getString('user_type') ?? 'parent';
+    final token = prefs.getString(AppConstants.tokenKey) ?? '';
 
+    // Debug snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Saving... Token: ${token.length > 20 ? token.substring(0, 20) : token}... Type: $userType'),
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    final response = await ApiService.post('/van/update-profile', {
+      'fullname': _nameController.text.trim(),
+      'phoneNo': _phoneController.text.trim(),
+      'address': _addressController.text.trim(),
+      'userType': userType,
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Status: ${response.statusCode} Data: ${response.data}'),
+        duration: const Duration(seconds: 5),
+        backgroundColor: const Color(0xFF27AE60),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      await _loadProfile();
+      setState(() => _isEditing = false);
+      if (mounted) _showSuccess('Profile updated successfully!');
+    }
+  } catch (e) {
+    if (mounted) _showError('Error: $e');
+  } finally {
+    if (mounted) setState(() => _isSaving = false);
+  }
+}
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
@@ -287,7 +311,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              _profile?['name'] ?? 'Parent',
+                              _nameController.text.isNotEmpty ? _nameController.text : 'Parent',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
