@@ -5,6 +5,10 @@ plugins {
     id "com.google.gms.google-services"
 }
 
+def keyPropertiesFile = rootProject.file("key.properties")
+def keyProperties = new Properties()
+keyProperties.load(new FileInputStream(keyPropertiesFile))
+
 android {
     namespace = "com.smartvan"
     compileSdk = 35
@@ -19,6 +23,15 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
 
+    signingConfigs {
+        release {
+            keyAlias = keyProperties['keyAlias']
+            keyPassword = keyProperties['keyPassword']
+            storeFile = keyProperties['storeFile'] ? file(keyProperties['storeFile']) : null
+            storePassword = keyProperties['storePassword']
+        }
+    }
+
     defaultConfig {
         applicationId = "com.smartvan"
         minSdk = 21
@@ -29,7 +42,9 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.debug
+            signingConfig = signingConfigs.release
+            minifyEnabled = false
+            shrinkResources = false
         }
     }
 }

@@ -59,7 +59,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _loadAlerts() async {
     try {
-      final response = await ApiService.get('/alert/getAlert');
+      final response = await ApiService.get('/alert/getDriverNotificationByParent');
       if (response.statusCode == 200) {
         final data = response.data;
         setState(() => _alerts = data is List ? data : (data['alerts'] ?? []));
