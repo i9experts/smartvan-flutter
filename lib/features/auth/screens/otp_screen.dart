@@ -8,11 +8,13 @@ import '../../../core/network/api_service.dart';
 class OtpScreen extends ConsumerStatefulWidget {
   final String phone;
   final bool isRegistration;
+  final String userType;
 
   const OtpScreen({
     super.key,
     required this.phone,
     required this.isRegistration,
+    this.userType = 'parent',
   });
 
   @override
@@ -55,6 +57,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       final response = await ApiService.post(endpoint, {
         'email': widget.phone,
         'otp': _otpCode,
+        'userType': widget.userType,
       });
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -73,6 +76,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           } else {
             context.go('/reset-password', extra: {
               'email': widget.phone,
+              'otp': _otpCode,
+              'userType': widget.userType,
             });
           }
         }
@@ -92,8 +97,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     setState(() => _isResending = true);
 
     try {
-      await ApiService.post('/auth/resend-otp', {
+      final resendEndpoint = widget.isRegistration
+          ? '/auth/resend-otp'
+          : '/auth/resend-otp-reset-password';
+
+      await ApiService.post(resendEndpoint, {
         'email': widget.phone,
+        'userType': widget.userType,
       });
 
       setState(() => _resendSeconds = 60);

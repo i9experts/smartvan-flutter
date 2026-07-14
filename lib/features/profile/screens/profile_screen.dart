@@ -86,14 +86,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final prefs = await SharedPreferences.getInstance();
       final userType = prefs.getString('user_type') ?? 'parent';
 
+      // Upload the picked image first (if any) — update-profile expects
+      // a plain image URL string, not a raw file.
+      String? imageUrl;
+      if (_selectedImage != null) {
+        imageUrl = await ApiService.uploadImage(_selectedImage!);
+      }
+
       final response = await ApiService.post('/van/update-profile', {
         'fullname': _nameController.text.trim(),
         'phoneNo': _phoneController.text.trim(),
         'address': _addressController.text.trim(),
         'userType': userType,
+        if (imageUrl != null) 'image': imageUrl,
       });
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        setState(() => _selectedImage = null);
         await _loadProfile();
         setState(() => _isEditing = false);
         if (mounted) _showSuccess('Profile updated successfully!');
@@ -228,9 +237,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     child: ClipOval(
                                       child: _selectedImage != null
                                           ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                                          : _profile?['profileImage'] != null
+                                          : _profile?['image'] != null
                                               ? Image.network(
-                                                  _profile!['profileImage'],
+                                                  _profile!['image'],
                                                   fit: BoxFit.cover,
                                                   errorBuilder: (_, __, ___) =>
                                                       _buildAvatarFallback(),

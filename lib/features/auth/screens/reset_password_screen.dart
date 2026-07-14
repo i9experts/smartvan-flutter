@@ -7,10 +7,12 @@ import '../../../core/network/api_service.dart';
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   final String email;
   final String otp;
+  final String userType;
   const ResetPasswordScreen({
     super.key,
     required this.email,
     required this.otp,
+    this.userType = 'parent',
   });
 
   @override
@@ -55,7 +57,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       final response = await ApiService.post('/auth/reset-password', {
         'email': widget.email,
         'otp': widget.otp,
-        'password': _passwordController.text,
+        'userType': widget.userType,
+        'newPassword': _passwordController.text,
       });
 
       if (response.statusCode == 200 || response.statusCode == 201) {

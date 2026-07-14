@@ -33,6 +33,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     try {
       final response = await ApiService.post('/auth/forgot-password', {
         'email': _emailController.text.trim(),
+        'userType': 'parent',
       });
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -40,6 +41,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           context.go('/otp', extra: {
             'phone': _emailController.text.trim(),
             'isRegistration': false,
+            'userType': 'parent',
           });
         }
       }

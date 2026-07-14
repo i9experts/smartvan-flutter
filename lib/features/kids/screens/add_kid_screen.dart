@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../core/network/api_service.dart';
+import 'home_address_picker_screen.dart';
 
 class AddKidScreen extends ConsumerStatefulWidget {
   const AddKidScreen({super.key});
@@ -26,6 +27,9 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
   String? _selectedSchoolName;
   String _selectedGender = 'male';
 
+  double? _homeLat;
+  double? _homeLng;
+
   @override
   void initState() {
     super.initState();
@@ -42,19 +46,19 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
   }
 
   Future<void> _loadSchools() async {
-  setState(() => _isLoadingSchools = true);
-  try {
-    final response = await ApiService.get('/school/getAllSchools');
-    if (response.statusCode == 200) {
-      final data = response.data;
-      final schools = data is List ? data : (data['data'] ?? data['schools'] ?? []);
-      setState(() => _schools = schools);
+    setState(() => _isLoadingSchools = true);
+    try {
+      final response = await ApiService.get('/school/getAllSchools');
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final schools = data is List ? data : (data['data'] ?? data['schools'] ?? []);
+        setState(() => _schools = schools);
+      }
+    } catch (e) {
+    } finally {
+      if (mounted) setState(() => _isLoadingSchools = false);
     }
-  } catch (e) {
-  } finally {
-    if (mounted) setState(() => _isLoadingSchools = false);
   }
-}
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -64,6 +68,26 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
     );
     if (picked != null) {
       setState(() => _selectedImage = File(picked.path));
+    }
+  }
+
+  Future<void> _pickHomeAddress() async {
+    final result = await Navigator.push<HomeAddressPickerResult>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => HomeAddressPickerScreen(
+          initialLat: _homeLat,
+          initialLng: _homeLng,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _homeLat = result.lat;
+        _homeLng = result.lng;
+        _addressController.text = result.address;
+      });
     }
   }
 
@@ -80,38 +104,35 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
       _showError('Please enter grade/class');
       return;
     }
+    if (_homeLat == null || _homeLng == null) {
+      _showError('Please set home location on the map');
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
-      final formData = FormData.fromMap({
+      // Step 1: upload the image first (if selected) — addKid does not
+      // accept a raw file, only an image URL string.
+      String? imageUrl;
+      if (_selectedImage != null) {
+        imageUrl = await ApiService.uploadImage(_selectedImage!);
+      }
+
+      // Step 2: send everything as JSON — the addKid endpoint has no
+      // multipart parser, so sending FormData here silently drops the
+      // entire body.
+      final response = await ApiService.post('/kid/addKid', {
         'fullname': _nameController.text.trim(),
         'schoolId': _selectedSchoolId,
         'grade': _gradeController.text.trim(),
         'age': _ageController.text.trim(),
         'gender': _selectedGender,
-        if (_selectedImage != null)
-          'image': await MultipartFile.fromFile(
-             _selectedImage!.path,
-             filename: 'kid_image.jpg',
-          ),
-  });
-
-      final dio = Dio();
-      final prefs =
-          await ApiService.getPrefs();
-      final token = prefs.getString('auth_token');
-
-      final response = await dio.post(
-        'https://smartvanride.com/backend/kid/addKid',
-        data: formData,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'multipart/form-data',
-          },
-        ),
-      );
+        'homeAddress': _addressController.text.trim(),
+        'homeLat': _homeLat,
+        'homeLng': _homeLng,
+        if (imageUrl != null) 'image': imageUrl,
+      });
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (mounted) {
@@ -293,15 +314,10 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
                   _buildGenderSelector(),
                   const SizedBox(height: 16),
 
-                  // Address
-                  _buildLabel('Home Address'),
+                  // Address (now map-based)
+                  _buildLabel('Home Address / Pickup Point *'),
                   const SizedBox(height: 8),
-                  _buildTextField(
-                    controller: _addressController,
-                    hint: 'Enter home address',
-                    icon: Icons.home_outlined,
-                    maxLines: 2,
-                  ),
+                  _buildAddressPicker(),
                   const SizedBox(height: 32),
 
                   // Submit Button
@@ -390,6 +406,60 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF1B2B6B), width: 2),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddressPicker() {
+    final hasLocation = _homeLat != null && _homeLng != null;
+    return GestureDetector(
+      onTap: _pickHomeAddress,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasLocation
+                ? const Color(0xFF1B2B6B)
+                : const Color(0xFFEAECF0),
+            width: hasLocation ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              hasLocation ? Icons.location_on : Icons.location_on_outlined,
+              color: const Color(0xFF1B2B6B),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                hasLocation
+                    ? _addressController.text
+                    : 'Tap to set pickup location on map',
+                style: TextStyle(
+                  color: hasLocation
+                      ? const Color(0xFF1A1A2E)
+                      : const Color(0xFF8A94A6),
+                  fontSize: 14,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+            ),
+            Text(
+              hasLocation ? 'Change' : 'Set',
+              style: const TextStyle(
+                color: Color(0xFF1B2B6B),
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -484,7 +554,7 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      school['name'] ?? 'Unknown School',
+                      school['schoolName'] ?? 'Unknown School',
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 14,
@@ -502,7 +572,7 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
               _selectedSchoolId = value;
               _selectedSchoolName = _schools
                   .firstWhere((s) =>
-                      (s['_id'] ?? s['id']) == value)['name'];
+                      (s['_id'] ?? s['id']) == value)['schoolName'];
             });
           },
         ),

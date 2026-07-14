@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -84,6 +85,46 @@ class ApiService {
       return response;
     } on DioException catch (e) {
       debugPrint('DELETE $path ERROR => ${e.message} | ${e.response?.data}');
+      rethrow;
+    }
+  }
+
+  /// Uploads an image file to the dedicated /upload/image endpoint
+  /// (multipart field name is 'file') and returns the resulting S3 URL.
+  /// Use this BEFORE calling addKid/update-profile/etc — those endpoints
+  /// expect `image` as a plain string URL, not a raw file.
+  static Future<String?> uploadImage(File file) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(AppConstants.tokenKey);
+
+    final uploadDio = Dio();
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          filename: file.path.split(Platform.pathSeparator).last,
+        ),
+      });
+
+      final response = await uploadDio.post(
+        '${AppConstants.baseUrl}/upload/image',
+        data: formData,
+        options: Options(
+          headers: {
+            if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+
+      debugPrint('POST /upload/image => ${response.statusCode} | ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data['url'] as String?;
+      }
+      return null;
+    } on DioException catch (e) {
+      debugPrint('POST /upload/image ERROR => ${e.message} | ${e.response?.data}');
       rethrow;
     }
   }

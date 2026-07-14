@@ -69,6 +69,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           context.go('/otp', extra: {
             'phone': _emailController.text.trim(),
             'isRegistration': true,
+            'userType': _selectedRole,
           });
         }
       }
