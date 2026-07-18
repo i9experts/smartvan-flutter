@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -771,7 +772,19 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     );
 
     if (confirmed == true) {
+      // Wait for the backend's real acknowledgment instead of assuming
+      // success the instant we emit — the button used to lie about this.
+      final ackCompleter = Completer<Map<String, dynamic>?>();
+
+      void onAck(dynamic data) {
+        if (!ackCompleter.isCompleted) {
+          ackCompleter.complete(data is Map<String, dynamic> ? data : null);
+        }
+      }
+
       try {
+        _socket?.on('sosAck', onAck);
+
         _socket?.emit('sos', {
           'tripId': _currentTripId,
           'message': 'Parent sent SOS alert',
@@ -781,10 +794,35 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
           },
         });
 
+        // Give the server a few seconds to respond before treating it as
+        // undelivered — a slow/dropped connection shouldn't hang the UI.
+        final ack = await ackCompleter.future.timeout(
+          const Duration(seconds: 6),
+          onTimeout: () => null,
+        );
+
+        if (!mounted) return;
+
+        final success = ack != null && ack['success'] == true;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success
+                  ? 'SOS Alert sent — the driver and school have been notified.'
+                  : 'Could not confirm the SOS was delivered. Please also call the school directly if this is an emergency.',
+            ),
+            backgroundColor: const Color(0xFFFF4B4B),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('SOS Alert sent successfully!'),
+              content: const Text(
+                  'Could not send SOS alert. Please call the school directly if this is an emergency.'),
               backgroundColor: const Color(0xFFFF4B4B),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -792,7 +830,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             ),
           );
         }
-      } catch (e) {}
+      } finally {
+        _socket?.off('sosAck', onAck);
+      }
     }
   }
 }
