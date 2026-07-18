@@ -8,7 +8,7 @@ import '../../features/auth/screens/otp_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/reset_password_screen.dart';
 import '../../features/home/screens/home_screen.dart';
-import '../../features/tracking/screens/tracking_screen.dart';
+import '../../features/tracking/screens/parent_tracking_screen.dart';
 import '../../features/kids/screens/kids_screen.dart';
 import '../../features/kids/screens/add_kid_screen.dart';
 import '../../features/alerts/screens/alerts_screen.dart';

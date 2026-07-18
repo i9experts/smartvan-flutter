@@ -7,7 +7,7 @@ import '../../../core/network/api_service.dart';
 import '../../alerts/screens/alerts_screen.dart';
 import '../../kids/screens/kids_screen.dart';
 import '../../profile/screens/profile_screen.dart';
-import '../../tracking/screens/tracking_screen.dart';
+import '../../tracking/screens/parent_tracking_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
