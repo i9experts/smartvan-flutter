@@ -57,9 +57,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     try {
       final response = await ApiService.post('/auth/registeruser', {
-        'name': _nameController.text.trim(),
+        'fullname': _nameController.text.trim(),
         'email': _emailController.text.trim(),
-        'phone': _phoneController.text.trim(),
+        'phoneNo': _phoneController.text.trim(),
         'password': _passwordController.text,
         'userType': _selectedRole,
       });
