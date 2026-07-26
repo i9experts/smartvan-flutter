@@ -13,6 +13,7 @@ import '../../features/kids/screens/kids_screen.dart';
 import '../../features/kids/screens/add_kid_screen.dart';
 import '../../features/alerts/screens/alerts_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
+import '../../features/profile/screens/change_password_screen.dart';
 import '../../features/fees/screens/payment_history_screen.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -81,6 +82,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/profile',
       builder: (context, state) => const ProfileScreen(),
+    ),
+    GoRoute(
+      path: '/change-password',
+      builder: (context, state) => const ChangePasswordScreen(),
     ),
   ],
 );

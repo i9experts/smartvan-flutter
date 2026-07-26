@@ -589,6 +589,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           const Divider(height: 1, color: Color(0xFFEAECF0)),
           _buildSettingsItem(
+            icon: Icons.lock_outlined,
+            label: 'Change Password',
+            color: const Color(0xFF1B2B6B),
+            hasArrow: true,
+            onTap: () => context.go('/change-password'),
+          ),
+          const Divider(height: 1, color: Color(0xFFEAECF0)),
+          _buildSettingsItem(
             icon: Icons.security_outlined,
             label: 'Privacy Policy',
             color: const Color(0xFF8A94A6),
@@ -601,7 +609,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             label: 'Help & Support',
             color: const Color(0xFFFFB800),
             hasArrow: true,
-            onTap: () => _launchUrl('https://smartvanride.com/support'),
+            onTap: () => _launchUrl('https://app.smartvan.pk/support'),
           ),
           const Divider(height: 1, color: Color(0xFFEAECF0)),
           _buildSettingsItem(
