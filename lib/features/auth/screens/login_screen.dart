@@ -58,17 +58,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await prefs.setString(AppConstants.tokenKey, token);
         await prefs.setString('user_type', 'parent');
 
-        // Save FCM token after successful login
+        // FCM token was already sent as part of the /auth/login request
+        // above, and the backend saves it there — no separate call needed.
         if (fcmToken != null) {
           await prefs.setString('fcm_token', fcmToken);
-          // Also update FCM token via API
-          try {
-            await ApiService.post('/auth/updateFcmToken', {
-              'fcmToken': fcmToken,
-            });
-          } catch (e) {
-            debugPrint('FCM update error: $e');
-          }
         }
 
         if (mounted) context.go('/home');
