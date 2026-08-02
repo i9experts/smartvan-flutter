@@ -1,3 +1,4 @@
+@'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../core/network/api_service.dart';
 import 'home_address_picker_screen.dart';
+import 'add_kid_screen.dart' show kGradeLevels;
 
 class KidsScreen extends ConsumerStatefulWidget {
   const KidsScreen({super.key});
@@ -491,12 +493,17 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
   void _showEditKid(Map<String, dynamic> kid) {
     final nameController =
         TextEditingController(text: kid['fullname'] ?? '');
-    final gradeController =
-        TextEditingController(text: kid['grade']?.toString() ?? '');
     final ageController =
         TextEditingController(text: kid['age']?.toString() ?? '');
     final addressController =
         TextEditingController(text: kid['homeAddress'] ?? '');
+
+    final currentGrade = kid['grade']?.toString();
+    // If this kid has a legacy free-text grade value that doesn't match
+    // the standardized list, leave it unselected rather than crash —
+    // DropdownButton requires its value to exist in items.
+    String? selectedGrade =
+        kGradeLevels.contains(currentGrade) ? currentGrade : null;
 
     String selectedGender = kid['gender'] ?? 'male';
     double? homeLat = (kid['homeLat'] as num?)?.toDouble();
@@ -553,7 +560,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
               await ApiService.post('/kid/update-kid', {
                 'kidId': kidId,
                 'fullname': nameController.text.trim(),
-                'grade': gradeController.text.trim(),
+                'grade': selectedGrade ?? currentGrade,
                 'age': ageController.text.trim(),
                 'gender': selectedGender,
                 'homeAddress': addressController.text.trim(),
@@ -667,7 +674,47 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                             children: [
                               _fieldLabel('Grade'),
                               const SizedBox(height: 8),
-                              _sheetTextField(gradeController, 'e.g. Grade 5'),
+                              Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF5F6FA),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                      color: const Color(0xFFEAECF0)),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: selectedGrade,
+                                    isExpanded: true,
+                                    hint: const Text('Select',
+                                        style: TextStyle(
+                                            color: Color(0xFF8A94A6),
+                                            fontFamily: 'Poppins',
+                                            fontSize: 13)),
+                                    icon: const Icon(
+                                        Icons.keyboard_arrow_down,
+                                        color: Color(0xFF1B2B6B)),
+                                    items: kGradeLevels
+                                        .map<DropdownMenuItem<String>>(
+                                            (grade) => DropdownMenuItem(
+                                                  value: grade,
+                                                  child: Text(grade,
+                                                      style: const TextStyle(
+                                                          fontFamily:
+                                                              'Poppins',
+                                                          fontSize: 13,
+                                                          color: Color(
+                                                              0xFF1A1A2E))),
+                                                ))
+                                        .toList(),
+                                    onChanged: (value) {
+                                      setSheetState(
+                                          () => selectedGrade = value);
+                                    },
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -939,3 +986,4 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
     }
   }
 }
+'@ | Set-Content -Path lib\features\kids\screens\kids_screen.dart -Encoding utf8

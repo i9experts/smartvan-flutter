@@ -23,6 +23,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
   bool _isConnected = false;
+  String? _connectionError;
   bool _isLoading = true;
   bool _noActiveTrip = false;
   Map<String, dynamic>? _tripData;
@@ -146,7 +147,10 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     );
 
     _socket!.onConnect((_) {
-      if (mounted) setState(() => _isConnected = true);
+      if (mounted) setState(() {
+        _isConnected = true;
+        _connectionError = null;
+      });
       if (_currentTripId != null) {
         _socket!.emit('joinTrip', {'tripId': _currentTripId});
       }
@@ -154,6 +158,26 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 
     _socket!.onDisconnect((_) {
       if (mounted) setState(() => _isConnected = false);
+    });
+
+    _socket!.onConnectError((data) {
+      debugPrint('Tracking socket connect_error: $data');
+      if (mounted) {
+        setState(() {
+          _isConnected = false;
+          _connectionError = data.toString();
+        });
+      }
+    });
+
+    _socket!.onConnectTimeout((data) {
+      debugPrint('Tracking socket connect_timeout: $data');
+      if (mounted) {
+        setState(() {
+          _isConnected = false;
+          _connectionError = 'Connection timed out';
+        });
+      }
     });
 
     _socket!.on('error', (data) {
@@ -392,7 +416,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          _isConnected ? 'Live' : 'Connecting...',
+                          _isConnected
+                              ? 'Live'
+                              : (_connectionError != null
+                                  ? 'Connection failed'
+                                  : 'Connecting...'),
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 12,

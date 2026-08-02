@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:dio/dio.dart';
 import 'dart:io';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
@@ -22,6 +23,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isEditing = false;
   bool _isSaving = false;
   bool _notificationsEnabled = true;
+  String? _loadError;
   bool _locationEnabled = true;
   File? _selectedImage;
 
@@ -46,6 +48,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
+    setState(() => _loadError = null);
     try {
       final response = await ApiService.get('/auth/getProfile');
       if (response.statusCode == 200) {
@@ -60,6 +63,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         });
       }
     } catch (e) {
+      String message = 'Could not load your profile.';
+      if (e is DioException && e.response?.data?['message'] != null) {
+        message = e.response!.data['message'].toString();
+      }
+      if (mounted) setState(() => _loadError = message);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -95,6 +103,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
       final response = await ApiService.post('/van/update-profile', {
         'fullname': _nameController.text.trim(),
+        'email': _emailController.text.trim(),
         'phoneNo': _phoneController.text.trim(),
         'address': _addressController.text.trim(),
         'userType': userType,
@@ -108,7 +117,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         if (mounted) _showSuccess('Profile updated successfully!');
       }
     } catch (e) {
-      if (mounted) _showError('Failed to save. Please try again.');
+      String message = 'Failed to save. Please try again.';
+      if (e is DioException && e.response?.data?['message'] != null) {
+        message = e.response!.data['message'].toString();
+      }
+      if (mounted) _showError(message);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
 import '../../alerts/screens/alerts_screen.dart';
@@ -21,6 +22,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Map<String, dynamic>? _profile;
   List<dynamic> _kids = [];
   List<dynamic> _alerts = [];
+  List<dynamic> _banners = [];
   bool _isLoading = true;
 
   @override
@@ -34,8 +36,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _loadProfile(),
       _loadKids(),
       _loadAlerts(),
+      _loadBanners(),
     ]);
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadBanners() async {
+    try {
+      final response = await ApiService.get('/promotion-banner/active');
+      if (response.statusCode == 200) {
+        final raw = response.data;
+        final data = raw['data'] ?? raw;
+        if (mounted) setState(() => _banners = data is List ? data : []);
+      }
+    } catch (e) {}
   }
 
   Future<void> _loadProfile() async {
@@ -136,7 +150,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
+                            Expanded(
+                              child: Row(
                               children: [
                                 Container(
                                   width: 48,
@@ -169,11 +184,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Column(
+                                Expanded(
+                                  child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
                                       'Good Morning, $firstName! 👋',
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -184,6 +203,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     const SizedBox(height: 2),
                                     const Text(
                                       'Track your child\'s journey',
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
                                       style: TextStyle(
                                         color: Colors.white70,
                                         fontSize: 12,
@@ -191,8 +212,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       ),
                                     ),
                                   ],
+                                  ),
                                 ),
                               ],
+                              ),
                             ),
                             Row(
                               children: [
@@ -405,100 +428,73 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildAdBanner() {
-    final List<Map<String, dynamic>> ads = [
-      {
-        'title': 'SmartVan Premium',
-        'subtitle': 'Get real-time alerts & live tracking for all your kids!',
-        'color1': const Color(0xFF1B2B6B),
-        'color2': const Color(0xFF2D4099),
-        'icon': Icons.star_outline,
-      },
-      {
-        'title': 'Safety First!',
-        'subtitle': 'SOS button available for emergencies. Stay protected!',
-        'color1': const Color(0xFFFF4B4B),
-        'color2': const Color(0xFFFF6B6B),
-        'icon': Icons.health_and_safety_outlined,
-      },
-      {
-        'title': 'New Feature!',
-        'subtitle': 'Attendance tracking is now live. Never miss a pickup!',
-        'color1': const Color(0xFF27AE60),
-        'color2': const Color(0xFF2ECC71),
-        'icon': Icons.fact_check_outlined,
-      },
-    ];
+    // Real, admin-managed banners — replaces what used to be a
+    // completely hardcoded, static list of 3 fake ads.
+    if (_banners.isEmpty) return const SizedBox.shrink();
 
     return SizedBox(
-      height: 100,
+      height: 110,
       child: PageView.builder(
-        itemCount: ads.length,
+        itemCount: _banners.length,
         itemBuilder: (context, index) {
-          final ad = ads[index];
-          return Container(
-            margin: const EdgeInsets.only(right: 4),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  ad['color1'] as Color,
-                  ad['color2'] as Color,
-                ],
+          final banner = _banners[index];
+          final imageUrl = banner['imageUrl'] as String?;
+          final title = banner['title'] as String? ?? '';
+          final redirectUrl = banner['redirectUrl'] as String?;
+
+          return GestureDetector(
+            onTap: redirectUrl == null || redirectUrl.isEmpty
+                ? null
+                : () async {
+                    final uri = Uri.tryParse(redirectUrl);
+                    if (uri != null && await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: const Color(0xFF1B2B6B),
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: (ad['color1'] as Color).withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    ad['icon'] as IconData,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        ad['title'] as String,
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (imageUrl != null)
+                    Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1B2B6B)),
+                    ),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.black.withOpacity(0), Colors.black.withOpacity(0.55)],
+                        ),
+                      ),
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Poppins',
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        ad['subtitle'] as String,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 11,
-                          fontFamily: 'Poppins',
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
