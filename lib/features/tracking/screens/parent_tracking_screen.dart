@@ -140,9 +140,12 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     _socket = IO.io(
       AppConstants.socketUrl,
       IO.OptionBuilder()
-          .setTransports(['websocket'])
+          .setTransports(['polling', 'websocket'])
           .setAuth({'token': token})
           .enableAutoConnect()
+          .enableReconnection()
+          .setReconnectionAttempts(5)
+          .setReconnectionDelay(2000)
           .build(),
     );
 
