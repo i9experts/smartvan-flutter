@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../../../core/network/api_service.dart';
+import 'home_address_picker_screen.dart';
 
 class KidsScreen extends ConsumerStatefulWidget {
   const KidsScreen({super.key});
@@ -490,159 +493,385 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
         TextEditingController(text: kid['fullname'] ?? '');
     final gradeController =
         TextEditingController(text: kid['grade']?.toString() ?? '');
+    final ageController =
+        TextEditingController(text: kid['age']?.toString() ?? '');
+    final addressController =
+        TextEditingController(text: kid['homeAddress'] ?? '');
+
+    String selectedGender = kid['gender'] ?? 'male';
+    double? homeLat = (kid['homeLat'] as num?)?.toDouble();
+    double? homeLng = (kid['homeLng'] as num?)?.toDouble();
+    File? selectedImage;
+    String? existingImageUrl = kid['image'];
+    bool isSaving = false;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          Future<void> pickImage() async {
+            final picker = ImagePicker();
+            final picked = await picker.pickImage(
+              source: ImageSource.gallery,
+              imageQuality: 70,
+            );
+            if (picked != null) {
+              setSheetState(() => selectedImage = File(picked.path));
+            }
+          }
+
+          Future<void> pickHomeAddress() async {
+            final result = await Navigator.push<HomeAddressPickerResult>(
+              sheetContext,
+              MaterialPageRoute(
+                builder: (_) => HomeAddressPickerScreen(
+                  initialLat: homeLat,
+                  initialLng: homeLng,
+                ),
+              ),
+            );
+            if (result != null) {
+              setSheetState(() {
+                homeLat = result.lat;
+                homeLng = result.lng;
+                addressController.text = result.address;
+              });
+            }
+          }
+
+          Future<void> saveChanges() async {
+            setSheetState(() => isSaving = true);
+            try {
+              String? imageUrl;
+              if (selectedImage != null) {
+                imageUrl = await ApiService.uploadImage(selectedImage!);
+              }
+
+              final kidId = kid['_id'] ?? kid['id'];
+              await ApiService.post('/kid/update-kid', {
+                'kidId': kidId,
+                'fullname': nameController.text.trim(),
+                'grade': gradeController.text.trim(),
+                'age': ageController.text.trim(),
+                'gender': selectedGender,
+                'homeAddress': addressController.text.trim(),
+                if (homeLat != null) 'homeLat': homeLat,
+                if (homeLng != null) 'homeLng': homeLng,
+                if (imageUrl != null) 'image': imageUrl,
+              });
+              if (sheetContext.mounted) {
+                Navigator.pop(sheetContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Kid updated successfully!'),
+                    backgroundColor: Color(0xFF27AE60),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                _loadKids();
+              }
+            } catch (e) {
+              setSheetState(() => isSaving = false);
+              if (sheetContext.mounted) {
+                ScaffoldMessenger.of(sheetContext).showSnackBar(
+                  const SnackBar(
+                    content: Text('Failed to update kid'),
+                    backgroundColor: Color(0xFFFF4B4B),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            }
+          }
+
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
             ),
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAECF0),
-                  borderRadius: BorderRadius.circular(2),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text(
-                'Edit Kid',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A1A2E),
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text('Full Name',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1A1A2E),
-                    fontFamily: 'Poppins',
-                  )),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  hintText: 'Enter full name',
-                  filled: true,
-                  fillColor: const Color(0xFFF5F6FA),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFEAECF0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFEAECF0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                        color: Color(0xFF1B2B6B), width: 2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text('Grade',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1A1A2E),
-                    fontFamily: 'Poppins',
-                  )),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: gradeController,
-                decoration: InputDecoration(
-                  hintText: 'Enter grade',
-                  filled: true,
-                  fillColor: const Color(0xFFF5F6FA),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFEAECF0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFEAECF0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                        color: Color(0xFF1B2B6B), width: 2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      final kidId = kid['_id'] ?? kid['id'];
-                      await ApiService.post('/kid/update-kid', {
-                        'kidId': kidId,
-                        'fullname': nameController.text.trim(),
-                        'grade': gradeController.text.trim(),
-                      });
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Kid updated successfully!'),
-                            backgroundColor: Color(0xFF27AE60),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                        _loadKids();
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Failed to update kid'),
-                            backgroundColor: Color(0xFFFF4B4B),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B2B6B),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('Save Changes',
+              padding: const EdgeInsets.all(24),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEAECF0),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Edit Kid',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1A2E),
                         fontFamily: 'Poppins',
-                      )),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Photo picker
+                    Center(
+                      child: GestureDetector(
+                        onTap: pickImage,
+                        child: Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFFF5F6FA),
+                            border: Border.all(
+                                color: const Color(0xFF1B2B6B), width: 2),
+                          ),
+                          child: ClipOval(
+                            child: selectedImage != null
+                                ? Image.file(selectedImage!, fit: BoxFit.cover)
+                                : (existingImageUrl != null &&
+                                        existingImageUrl!.isNotEmpty)
+                                    ? Image.network(existingImageUrl!,
+                                        fit: BoxFit.cover)
+                                    : const Icon(Icons.add_a_photo_outlined,
+                                        color: Color(0xFF1B2B6B), size: 28),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    _fieldLabel('Full Name'),
+                    const SizedBox(height: 8),
+                    _sheetTextField(nameController, 'Enter full name'),
+                    const SizedBox(height: 16),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _fieldLabel('Grade'),
+                              const SizedBox(height: 8),
+                              _sheetTextField(gradeController, 'e.g. Grade 5'),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _fieldLabel('Age'),
+                              const SizedBox(height: 8),
+                              _sheetTextField(ageController, 'e.g. 10',
+                                  keyboardType: TextInputType.number),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    _fieldLabel('Gender'),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                setSheetState(() => selectedGender = 'male'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: selectedGender == 'male'
+                                    ? const Color(0xFF1B2B6B)
+                                    : const Color(0xFFF5F6FA),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Center(
+                                child: Text('Male',
+                                    style: TextStyle(
+                                      color: selectedGender == 'male'
+                                          ? Colors.white
+                                          : const Color(0xFF8A94A6),
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Poppins',
+                                    )),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                setSheetState(() => selectedGender = 'female'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: selectedGender == 'female'
+                                    ? const Color(0xFF1B2B6B)
+                                    : const Color(0xFFF5F6FA),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Center(
+                                child: Text('Female',
+                                    style: TextStyle(
+                                      color: selectedGender == 'female'
+                                          ? Colors.white
+                                          : const Color(0xFF8A94A6),
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Poppins',
+                                    )),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    _fieldLabel('Home Address / Pickup Point'),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: pickHomeAddress,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F6FA),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: homeLat != null
+                                ? const Color(0xFF1B2B6B)
+                                : const Color(0xFFEAECF0),
+                            width: homeLat != null ? 2 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              homeLat != null
+                                  ? Icons.location_on
+                                  : Icons.location_on_outlined,
+                              color: const Color(0xFF1B2B6B),
+                              size: 18,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                addressController.text.isNotEmpty
+                                    ? addressController.text
+                                    : 'Tap to set pickup location on map',
+                                style: TextStyle(
+                                  color: addressController.text.isNotEmpty
+                                      ? const Color(0xFF1A1A2E)
+                                      : const Color(0xFF8A94A6),
+                                  fontSize: 13,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
+                            ),
+                            Text(
+                              homeLat != null ? 'Change' : 'Set',
+                              style: const TextStyle(
+                                color: Color(0xFF1B2B6B),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: isSaving ? null : saveChanges,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1B2B6B),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: isSaving
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Save Changes',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Poppins',
+                                )),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-            ],
-          ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _fieldLabel(String text) {
+    return Text(text,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1A1A2E),
+          fontFamily: 'Poppins',
+        ));
+  }
+
+  Widget _sheetTextField(TextEditingController controller, String hint,
+      {TextInputType keyboardType = TextInputType.text}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        hintText: hint,
+        filled: true,
+        fillColor: const Color(0xFFF5F6FA),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFEAECF0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFEAECF0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF1B2B6B), width: 2),
         ),
       ),
     );
