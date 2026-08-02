@@ -1,4 +1,3 @@
-@'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -986,4 +985,3 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
     }
   }
 }
-'@ | Set-Content -Path lib\features\kids\screens\kids_screen.dart -Encoding utf8
