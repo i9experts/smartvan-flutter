@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/network/api_service.dart';
+import 'add_kid_screen.dart' show kGradeLevels;
 
 class KidsScreen extends ConsumerStatefulWidget {
   const KidsScreen({super.key});
@@ -488,14 +489,19 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
   void _showEditKid(Map<String, dynamic> kid) {
     final nameController =
         TextEditingController(text: kid['fullname'] ?? '');
-    final gradeController =
-        TextEditingController(text: kid['grade']?.toString() ?? '');
+    final currentGrade = kid['grade']?.toString();
+    // If this kid has a legacy free-text grade value that doesn't match
+    // the standardized list, leave it unselected rather than crash —
+    // DropdownButton requires its value to exist in items.
+    String? selectedGrade =
+        kGradeLevels.contains(currentGrade) ? currentGrade : null;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
@@ -569,24 +575,34 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                     fontFamily: 'Poppins',
                   )),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: gradeController,
-                decoration: InputDecoration(
-                  hintText: 'Enter grade',
-                  filled: true,
-                  fillColor: const Color(0xFFF5F6FA),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFEAECF0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFEAECF0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                        color: Color(0xFF1B2B6B), width: 2),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F6FA),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFEAECF0)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedGrade,
+                    hint: const Text('Select grade',
+                        style: TextStyle(
+                            color: Color(0xFF8A94A6), fontFamily: 'Poppins')),
+                    isExpanded: true,
+                    icon: const Icon(Icons.keyboard_arrow_down,
+                        color: Color(0xFF1B2B6B)),
+                    items: kGradeLevels
+                        .map<DropdownMenuItem<String>>((grade) => DropdownMenuItem(
+                              value: grade,
+                              child: Text(grade,
+                                  style: const TextStyle(
+                                      fontFamily: 'Poppins',
+                                      color: Color(0xFF1A1A2E))),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setModalState(() => selectedGrade = value);
+                    },
                   ),
                 ),
               ),
@@ -601,7 +617,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                       await ApiService.post('/kid/update-kid', {
                         'kidId': kidId,
                         'fullname': nameController.text.trim(),
-                        'grade': gradeController.text.trim(),
+                        'grade': selectedGrade ?? currentGrade,
                       });
                       if (context.mounted) {
                         Navigator.pop(context);
@@ -644,6 +660,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -7,6 +7,16 @@ import 'dart:io';
 import '../../../core/network/api_service.dart';
 import 'home_address_picker_screen.dart';
 
+// Matches the class list used in the admin panel's Student Management —
+// keeping this consistent everywhere avoids free-text grade values
+// (typos, inconsistent formats like "5th"/"Class 5"/"grade five") from
+// polluting grade-based filtering and analytics across the platform.
+const List<String> kGradeLevels = [
+  'Pre Nursery', 'Nursery', 'KG',
+  'G1', 'G2', 'G3', 'G4', 'G5', 'G6',
+  'G7', 'G8', 'G9', 'G10', 'G11', 'G12',
+];
+
 class AddKidScreen extends ConsumerStatefulWidget {
   const AddKidScreen({super.key});
 
@@ -16,7 +26,6 @@ class AddKidScreen extends ConsumerStatefulWidget {
 
 class _AddKidScreenState extends ConsumerState<AddKidScreen> {
   final _nameController = TextEditingController();
-  final _gradeController = TextEditingController();
   final _ageController = TextEditingController();
   final _addressController = TextEditingController();
   bool _isLoading = false;
@@ -26,6 +35,7 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
   String? _selectedSchoolId;
   String? _selectedSchoolName;
   String _selectedGender = 'male';
+  String? _selectedGrade;
 
   double? _homeLat;
   double? _homeLng;
@@ -39,7 +49,6 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _gradeController.dispose();
     _ageController.dispose();
     _addressController.dispose();
     super.dispose();
@@ -100,8 +109,8 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
       _showError('Please select a school');
       return;
     }
-    if (_gradeController.text.isEmpty) {
-      _showError('Please enter grade/class');
+    if (_selectedGrade == null) {
+      _showError('Please select a grade/class');
       return;
     }
     if (_homeLat == null || _homeLng == null) {
@@ -125,7 +134,7 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
       final response = await ApiService.post('/kid/addKid', {
         'fullname': _nameController.text.trim(),
         'schoolId': _selectedSchoolId,
-        'grade': _gradeController.text.trim(),
+        'grade': _selectedGrade,
         'age': _ageController.text.trim(),
         'gender': _selectedGender,
         'homeAddress': _addressController.text.trim(),
@@ -290,11 +299,7 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
                   // Grade
                   _buildLabel('Grade / Class *'),
                   const SizedBox(height: 8),
-                  _buildTextField(
-                    controller: _gradeController,
-                    hint: 'e.g. Grade 3, Class 5',
-                    icon: Icons.class_outlined,
-                  ),
+                  _buildGradeDropdown(),
                   const SizedBox(height: 16),
 
                   // Age
@@ -574,6 +579,60 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
                   .firstWhere((s) =>
                       (s['_id'] ?? s['id']) == value)['schoolName'];
             });
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradeDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _selectedGrade != null
+              ? const Color(0xFF1B2B6B)
+              : const Color(0xFFEAECF0),
+          width: _selectedGrade != null ? 2 : 1,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedGrade,
+          hint: const Row(
+            children: [
+              Icon(Icons.class_outlined, color: Color(0xFF1B2B6B)),
+              SizedBox(width: 12),
+              Text(
+                'Select Grade / Class',
+                style: TextStyle(
+                  color: Color(0xFF8A94A6),
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down,
+              color: Color(0xFF1B2B6B)),
+          items: kGradeLevels.map<DropdownMenuItem<String>>((grade) {
+            return DropdownMenuItem<String>(
+              value: grade,
+              child: Text(
+                grade,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  color: Color(0xFF1A1A2E),
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() => _selectedGrade = value);
           },
         ),
       ),
