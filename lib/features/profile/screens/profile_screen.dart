@@ -11,7 +11,8 @@ import '../../../core/network/api_service.dart';
 import '../../fees/screens/payment_history_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback? onProfileUpdated;
+  const ProfileScreen({super.key, this.onProfileUpdated});
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
@@ -114,6 +115,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         setState(() => _selectedImage = null);
         await _loadProfile();
         setState(() => _isEditing = false);
+        widget.onProfileUpdated?.call();
         if (mounted) _showSuccess('Profile updated successfully!');
       }
     } catch (e) {

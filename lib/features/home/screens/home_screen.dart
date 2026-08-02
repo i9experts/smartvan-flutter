@@ -111,7 +111,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case 3:
         return const AlertsScreen();
       case 4:
-        return const ProfileScreen();
+        return ProfileScreen(onProfileUpdated: _loadProfile);
       default:
         return _buildHome();
     }
