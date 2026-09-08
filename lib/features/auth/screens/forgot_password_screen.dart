@@ -44,6 +44,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             'userType': 'parent',
           });
         }
+      } else {
+        // ApiService treats any 4xx as a normal (non-throwing) response, so
+        // e.g. "no account with this email" would otherwise just reset the
+        // spinner with no explanation.
+        final message = response.data is Map
+            ? (response.data['message'] ?? 'Failed to send OTP. Try again.')
+            : 'Failed to send OTP. Try again.';
+        _showError(message.toString());
       }
     } on DioException catch (e) {
       final message =

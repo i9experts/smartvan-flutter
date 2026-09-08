@@ -24,6 +24,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<dynamic> _alerts = [];
   List<dynamic> _banners = [];
   bool _isLoading = true;
+  bool _hasActiveTrip = false;
+  String? _activeTripDriverName;
+  String? _activeTripStatus;
 
   @override
   void initState() {
@@ -37,8 +40,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _loadKids(),
       _loadAlerts(),
       _loadBanners(),
+      _loadActiveTrip(),
     ]);
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadActiveTrip() async {
+    try {
+      final response = await ApiService.get('/kid/getActiveTripDetails');
+      if (response.statusCode == 200 && response.data != null) {
+        final raw = response.data;
+        final trips = (raw is Map ? raw['data'] : null) as List? ?? [];
+        if (trips.isNotEmpty) {
+          final trip = Map<String, dynamic>.from(trips.first as Map);
+          setState(() {
+            _hasActiveTrip = true;
+            _activeTripDriverName = trip['driverFullname'] ?? 'your driver';
+            _activeTripStatus = trip['status'] ?? 'En Route';
+          });
+          return;
+        }
+      }
+      setState(() => _hasActiveTrip = false);
+    } catch (e) {
+      setState(() => _hasActiveTrip = false);
+    }
   }
 
   Future<void> _loadBanners() async {
@@ -56,7 +82,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       final response = await ApiService.get('/auth/getProfile');
       if (response.statusCode == 200) {
-        setState(() => _profile = response.data);
+        // Backend wraps the profile in { message, data: {...} } — this was
+        // previously assigned unwrapped, so every field read off _profile
+        // (name, image, etc.) was always looking at the wrong object.
+        final raw = response.data;
+        setState(() => _profile = raw is Map ? (raw['data'] ?? raw) : null);
       }
     } catch (e) {}
   }
@@ -65,8 +95,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       final response = await ApiService.get('/kid/getKids');
       if (response.statusCode == 200) {
-        final data = response.data;
-        setState(() => _kids = data is List ? data : (data['kids'] ?? []));
+        final raw = response.data;
+        // Backend returns { message, data: [...] } — there is no 'kids' key.
+        final data = raw is Map ? raw['data'] : raw;
+        setState(() => _kids = data is List ? data : []);
       }
     } catch (e) {}
   }
@@ -76,7 +108,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final response = await ApiService.get('/alert/getDriverNotificationByParent');
       if (response.statusCode == 200) {
         final data = response.data;
-        setState(() => _alerts = data is List ? data : (data['alerts'] ?? []));
+        // API returns { data: { notifications: [...] } } or { alerts: [...] }
+        // or just a list — mirrors the parsing already used by AlertsScreen.
+        List<dynamic> alerts = [];
+        if (data is List) {
+          alerts = data;
+        } else if (data is Map) {
+          final inner = data['data'];
+          if (inner is Map) {
+            alerts = inner['notifications'] ?? inner['alerts'] ?? [];
+          } else if (inner is List) {
+            alerts = inner;
+          } else {
+            alerts = data['notifications'] ?? data['alerts'] ?? [];
+          }
+        }
+        setState(() => _alerts = alerts);
       }
     } catch (e) {}
   }
@@ -118,7 +165,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildHome() {
-    final name = _profile?['name'] ?? 'Parent';
+    final name = _profile?['fullname'] ?? _profile?['name'] ?? 'Parent';
     final firstName = name.toString().split(' ').first;
 
     return RefreshIndicator(
@@ -165,9 +212,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     color: Colors.white.withOpacity(0.2),
                                   ),
                                   child: ClipOval(
-                                    child: _profile?['profileImage'] != null
+                                    child: (_profile?['image'] ?? _profile?['profileImage']) != null
                                         ? Image.network(
-                                            _profile!['profileImage'],
+                                            _profile!['image'] ?? _profile!['profileImage'],
                                             fit: BoxFit.cover,
                                             errorBuilder: (_, __, ___) =>
                                                 const Icon(
@@ -266,8 +313,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildActiveTripBanner(),
-                  const SizedBox(height: 24),
+                  if (_hasActiveTrip) ...[
+                    _buildActiveTripBanner(),
+                    const SizedBox(height: 24),
+                  ],
                   _buildAdBanner(),
                   const SizedBox(height: 24),
                   const Text(
@@ -376,11 +425,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 color: Colors.white, size: 28),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Van is on the way!',
                   style: TextStyle(
                     color: Colors.white,
@@ -389,10 +438,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     fontFamily: 'Poppins',
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
-                  'Estimated arrival in 12 minutes',
-                  style: TextStyle(
+                  // No ETA is available from this endpoint — showing a
+                  // fabricated "12 minutes" regardless of reality was worse
+                  // than just reporting the real trip status.
+                  '${_activeTripDriverName ?? 'Your driver'} is $_activeTripStatus',
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
                     fontFamily: 'Poppins',

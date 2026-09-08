@@ -74,6 +74,14 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             ),
           );
         }
+      } else {
+        // ApiService treats any 4xx as a normal (non-throwing) response, so
+        // an expired OTP would otherwise just reset the spinner with no
+        // explanation.
+        final message = response.data is Map
+            ? (response.data['message'] ?? 'Reset failed. Try again.')
+            : 'Reset failed. Try again.';
+        _showError(message.toString());
       }
     } on DioException catch (e) {
       final message =

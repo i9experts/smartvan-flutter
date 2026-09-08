@@ -17,6 +17,7 @@ class KidsScreen extends ConsumerStatefulWidget {
 class _KidsScreenState extends ConsumerState<KidsScreen> {
   List<dynamic> _kids = [];
   bool _isLoading = true;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -25,14 +26,18 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
   }
 
   Future<void> _loadKids() async {
+    setState(() => _hasError = false);
     try {
       final response = await ApiService.get('/kid/getKids');
       if (response.statusCode == 200) {
         final raw = response.data;
         final data = raw['data'] ?? raw;
         setState(() => _kids = data is List ? data : []);
+      } else {
+        if (mounted) setState(() => _hasError = true);
       }
     } catch (e) {
+      if (mounted) setState(() => _hasError = true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -105,9 +110,11 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                     child: CircularProgressIndicator(
                         color: Color(0xFF1B2B6B)),
                   )
-                : _kids.isEmpty
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
+                : _hasError && _kids.isEmpty
+                    ? _buildErrorState()
+                    : _kids.isEmpty
+                        ? _buildEmptyState()
+                        : RefreshIndicator(
                         onRefresh: _loadKids,
                         color: const Color(0xFF1B2B6B),
                         child: ListView.builder(
@@ -118,6 +125,56 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                           },
                         ),
                       ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF4B4B).withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.wifi_off_rounded, size: 50,
+                color: Color(0xFFFF4B4B)),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Couldn\'t Load Your Kids',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1A2E),
+              fontFamily: 'Poppins',
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Check your connection and try again',
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFF8A94A6),
+              fontFamily: 'Poppins',
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadKids,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1B2B6B),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Retry', style: TextStyle(fontFamily: 'Poppins')),
           ),
         ],
       ),
@@ -556,7 +613,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
               }
 
               final kidId = kid['_id'] ?? kid['id'];
-              await ApiService.post('/kid/update-kid', {
+              final response = await ApiService.post('/kid/update-kid', {
                 'kidId': kidId,
                 'fullname': nameController.text.trim(),
                 'grade': selectedGrade ?? currentGrade,
@@ -567,6 +624,14 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                 if (homeLng != null) 'homeLng': homeLng,
                 if (imageUrl != null) 'image': imageUrl,
               });
+              // ApiService treats any 4xx as a normal (non-throwing)
+              // response, so this used to show "success" even on a
+              // rejected update.
+              if (response.statusCode != 200 && response.statusCode != 201) {
+                throw Exception(response.data is Map
+                    ? (response.data['message'] ?? 'Failed to update kid')
+                    : 'Failed to update kid');
+              }
               if (sheetContext.mounted) {
                 Navigator.pop(sheetContext);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -582,9 +647,11 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
               setSheetState(() => isSaving = false);
               if (sheetContext.mounted) {
                 ScaffoldMessenger.of(sheetContext).showSnackBar(
-                  const SnackBar(
-                    content: Text('Failed to update kid'),
-                    backgroundColor: Color(0xFFFF4B4B),
+                  SnackBar(
+                    content: Text(e is Exception
+                        ? e.toString().replaceFirst('Exception: ', '')
+                        : 'Failed to update kid'),
+                    backgroundColor: const Color(0xFFFF4B4B),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
@@ -960,7 +1027,15 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
     if (confirmed == true) {
       try {
         final kidId = kid['_id'] ?? kid['id'];
-        await ApiService.post('/kid/deleteKidByParent', {'kidId': kidId});
+        final response = await ApiService.post(
+            '/kid/deleteKidByParent', {'kidId': kidId});
+        // ApiService treats any 4xx as a normal (non-throwing) response, so
+        // this used to show "success" even on a rejected delete.
+        if (response.statusCode != 200 && response.statusCode != 201) {
+          throw Exception(response.data is Map
+              ? (response.data['message'] ?? 'Failed to remove kid')
+              : 'Failed to remove kid');
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -974,9 +1049,11 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to remove kid'),
-              backgroundColor: Color(0xFFFF4B4B),
+            SnackBar(
+              content: Text(e is Exception
+                  ? e.toString().replaceFirst('Exception: ', '')
+                  : 'Failed to remove kid'),
+              backgroundColor: const Color(0xFFFF4B4B),
               behavior: SnackBarBehavior.floating,
             ),
           );

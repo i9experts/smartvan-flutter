@@ -42,6 +42,10 @@ final GoRouter appRouter = GoRouter(
         return OtpScreen(
           phone: extra['phone'],
           isRegistration: extra['isRegistration'] ?? true,
+          // Every caller already sends this (e.g. RegisterScreen sends the
+          // user's chosen role) — it just wasn't being read here, so OTP
+          // verification always fell back to 'parent' regardless.
+          userType: extra['userType'] ?? 'parent',
         );
       },
     ),
@@ -56,6 +60,7 @@ final GoRouter appRouter = GoRouter(
         return ResetPasswordScreen(
           email: extra['email'] as String,
           otp: extra['otp'] as String,
+          userType: extra['userType'] ?? 'parent',
         );
       },
     ),

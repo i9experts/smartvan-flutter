@@ -72,6 +72,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             'userType': _selectedRole,
           });
         }
+      } else {
+        // ApiService treats any 4xx as a normal (non-throwing) response, so
+        // a validation failure (e.g. duplicate email) would otherwise just
+        // reset the spinner with no explanation at all.
+        final message = response.data is Map
+            ? (response.data['message'] ?? 'Registration failed. Try again.')
+            : 'Registration failed. Try again.';
+        _showError(message.toString());
       }
     } on DioException catch (e) {
       final message =
