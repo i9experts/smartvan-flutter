@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
@@ -63,16 +65,15 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (mounted) {
           if (widget.isRegistration) {
-            context.go('/login');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Account verified! Please login.'),
-                backgroundColor: const Color(0xFF27AE60),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-            );
+            final data = response.data;
+            final token = data['data']?['token'] ??
+                data['token'] ??
+                data['access_token'] ??
+                '';
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString(AppConstants.tokenKey, token);
+            await prefs.setString('user_type', 'parent');
+            if (mounted) context.go('/home');
           } else {
             context.go('/reset-password', extra: {
               'email': widget.phone,

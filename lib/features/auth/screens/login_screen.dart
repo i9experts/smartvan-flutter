@@ -36,7 +36,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Get FCM token before login
       String? fcmToken;
       try {
-        fcmToken = await FCMService.getToken();
+        // fcmToken = await FCMService.getToken();
       } catch (e) {
         debugPrint('FCM token error: $e');
       }
@@ -66,7 +66,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
         if (mounted) context.go('/home');
       } else {
-        _showError(response.data?['message'] ?? 'Login failed. Please try again.');
+        _showError(
+            response.data?['message'] ?? 'Login failed. Please try again.');
       }
     } on Exception catch (e) {
       _showError('Login failed. Please check your credentials and try again.');
@@ -188,11 +189,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           obscureText: _obscurePassword,
                           suffix: IconButton(
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
                               color: const Color(0xFF8A94A6),
                               size: 20,
                             ),
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -337,7 +341,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           prefixIcon: Icon(icon, color: const Color(0xFF8A94A6), size: 20),
           suffixIcon: suffix,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );

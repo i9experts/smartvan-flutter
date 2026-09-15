@@ -17,7 +17,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  String _selectedRole = 'parent';
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
@@ -61,7 +60,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         'email': _emailController.text.trim(),
         'phoneNo': _phoneController.text.trim(),
         'password': _passwordController.text,
-        'userType': _selectedRole,
+        'userType': 'parent',
       });
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -69,7 +68,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           context.go('/otp', extra: {
             'phone': _emailController.text.trim(),
             'isRegistration': true,
-            'userType': _selectedRole,
+            'userType': 'parent',
           });
         }
       }
@@ -165,134 +164,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             color: Color(0xFF8A94A6),
                             fontFamily: 'Poppins',
                           ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Role Selection
-                        const Text(
-                          'I am registering as',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF1A1A2E),
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _selectedRole = 'parent'),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 16),
-                                  decoration: BoxDecoration(
-                                    color: _selectedRole == 'parent'
-                                        ? const Color(0xFF1B2B6B)
-                                        : Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: _selectedRole == 'parent'
-                                          ? const Color(0xFF1B2B6B)
-                                          : const Color(0xFFEAECF0),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Icon(
-                                        Icons.family_restroom,
-                                        size: 32,
-                                        color: _selectedRole == 'parent'
-                                            ? Colors.white
-                                            : const Color(0xFF8A94A6),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Parent',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: _selectedRole == 'parent'
-                                              ? Colors.white
-                                              : const Color(0xFF1A1A2E),
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Track your child',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: _selectedRole == 'parent'
-                                              ? Colors.white70
-                                              : const Color(0xFF8A94A6),
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _selectedRole = 'driver'),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 16),
-                                  decoration: BoxDecoration(
-                                    color: _selectedRole == 'driver'
-                                        ? const Color(0xFF1B2B6B)
-                                        : Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: _selectedRole == 'driver'
-                                          ? const Color(0xFF1B2B6B)
-                                          : const Color(0xFFEAECF0),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Icon(
-                                        Icons.drive_eta,
-                                        size: 32,
-                                        color: _selectedRole == 'driver'
-                                            ? Colors.white
-                                            : const Color(0xFF8A94A6),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Driver',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: _selectedRole == 'driver'
-                                              ? Colors.white
-                                              : const Color(0xFF1A1A2E),
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Manage your route',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: _selectedRole == 'driver'
-                                              ? Colors.white70
-                                              : const Color(0xFF8A94A6),
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
                         ),
                         const SizedBox(height: 24),
 
