@@ -74,6 +74,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             ),
           );
         }
+      } else {
+        _showError(
+            response.data?['message']?.toString() ?? 'Reset failed. Try again.');
       }
     } on DioException catch (e) {
       final message =

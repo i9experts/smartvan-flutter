@@ -82,6 +82,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
             });
           }
         }
+      } else {
+        _showError(
+            response.data?['message']?.toString() ?? 'Invalid OTP. Try again.');
       }
     } on DioException catch (e) {
       final message = e.response?.data?['message'] ?? 'Invalid OTP. Try again.';

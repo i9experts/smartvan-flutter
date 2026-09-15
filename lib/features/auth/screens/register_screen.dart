@@ -71,6 +71,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             'userType': 'parent',
           });
         }
+      } else {
+        _showError(response.data?['message']?.toString() ??
+            'Registration failed. Try again.');
       }
     } on DioException catch (e) {
       final message =

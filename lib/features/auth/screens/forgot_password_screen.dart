@@ -44,6 +44,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             'userType': 'parent',
           });
         }
+      } else {
+        _showError(response.data?['message']?.toString() ??
+            'Failed to send OTP. Try again.');
       }
     } on DioException catch (e) {
       final message =
