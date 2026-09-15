@@ -36,7 +36,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Get FCM token before login
       String? fcmToken;
       try {
-        // fcmToken = await FCMService.getToken();
+        fcmToken = await FCMService.getToken();
       } catch (e) {
         debugPrint('FCM token error: $e');
       }
