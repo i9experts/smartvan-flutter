@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../core/network/api_service.dart';
+import '../../../core/widgets/skeletons/kids_screen_skeleton.dart';
 import 'home_address_picker_screen.dart';
 import 'add_kid_screen.dart' show kGradeLevels;
 
@@ -101,10 +102,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
           ),
           Expanded(
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                        color: Color(0xFF1B2B6B)),
-                  )
+                ? const KidsScreenSkeleton()
                 : _kids.isEmpty
                     ? _buildEmptyState()
                     : RefreshIndicator(

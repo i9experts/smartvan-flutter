@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/widgets/skeletons/payment_history_skeleton.dart';
 
 class PaymentHistoryScreen extends StatefulWidget {
   const PaymentHistoryScreen({super.key});
@@ -149,7 +150,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: _navy))
+          ? const PaymentHistorySkeleton()
           : _error.isNotEmpty ? _buildError() : _buildContent(),
     );
   }

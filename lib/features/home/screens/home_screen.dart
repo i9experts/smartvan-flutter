@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/widgets/skeletons/home_screen_skeleton.dart';
 import '../../alerts/screens/alerts_screen.dart';
 import '../../kids/screens/kids_screen.dart';
 import '../../profile/screens/profile_screen.dart';
@@ -73,7 +74,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _loadAlerts() async {
     try {
-      final response = await ApiService.get('/alert/getDriverNotificationByParent');
+      final response =
+          await ApiService.get('/alert/getDriverNotificationByParent');
       if (response.statusCode == 200) {
         final data = response.data;
         setState(() => _alerts = data is List ? data : (data['alerts'] ?? []));
@@ -82,6 +84,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Logout',
+          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Are you sure you want to logout?',
+          style: TextStyle(fontFamily: 'Poppins'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF8A94A6), fontFamily: 'Poppins'),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF4B4B),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.white, fontFamily: 'Poppins'),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(AppConstants.tokenKey);
     if (mounted) context.go('/login');
@@ -91,11 +130,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF1B2B6B)),
-            )
-          : _buildBody(),
+      body: _isLoading ? const HomeScreenSkeleton() : _buildBody(),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
@@ -127,7 +162,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 160,
+            expandedHeight: 90,
             floating: false,
             pinned: true,
             backgroundColor: const Color(0xFF1B2B6B),
@@ -152,69 +187,70 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           children: [
                             Expanded(
                               child: Row(
-                              children: [
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: const Color(0xFFFFB800),
-                                      width: 2,
+                                children: [
+                                  Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: const Color(0xFFFFB800),
+                                        width: 2,
+                                      ),
+                                      color: Colors.white.withOpacity(0.2),
                                     ),
-                                    color: Colors.white.withOpacity(0.2),
-                                  ),
-                                  child: ClipOval(
-                                    child: _profile?['profileImage'] != null
-                                        ? Image.network(
-                                            _profile!['profileImage'],
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
-                                                const Icon(
+                                    child: ClipOval(
+                                      child: _profile?['profileImage'] != null
+                                          ? Image.network(
+                                              _profile!['profileImage'],
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) =>
+                                                  const Icon(
+                                                Icons.person,
+                                                color: Colors.white,
+                                                size: 28,
+                                              ),
+                                            )
+                                          : const Icon(
                                               Icons.person,
                                               color: Colors.white,
                                               size: 28,
                                             ),
-                                          )
-                                        : const Icon(
-                                            Icons.person,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'Good Morning, $firstName! 👋',
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                          style: const TextStyle(
                                             color: Colors.white,
-                                            size: 28,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Poppins',
                                           ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'Good Morning, $firstName! 👋',
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Poppins',
-                                      ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        const Text(
+                                          'Track your child\'s journey',
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 12,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 2),
-                                    const Text(
-                                      'Track your child\'s journey',
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 12,
-                                        fontFamily: 'Poppins',
-                                      ),
-                                    ),
-                                  ],
                                   ),
-                                ),
-                              ],
+                                ],
                               ),
                             ),
                             Row(
@@ -224,10 +260,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       setState(() => _currentIndex = 3),
                                   icon: Stack(
                                     children: [
-                                      const Icon(
-                                          Icons.notifications_outlined,
-                                          color: Colors.white,
-                                          size: 26),
+                                      const Icon(Icons.notifications_outlined,
+                                          color: Colors.white, size: 26),
                                       if (_alerts.isNotEmpty)
                                         Positioned(
                                           right: 0,
@@ -372,8 +406,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.directions_bus,
-                color: Colors.white, size: 28),
+            child:
+                const Icon(Icons.directions_bus, color: Colors.white, size: 28),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -406,8 +440,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: const Color(0xFF27AE60),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -448,7 +481,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 : () async {
                     final uri = Uri.tryParse(redirectUrl);
                     if (uri != null && await canLaunchUrl(uri)) {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      await launchUrl(uri,
+                          mode: LaunchMode.externalApplication);
                     }
                   },
             child: Container(
@@ -465,7 +499,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Image.network(
                       imageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1B2B6B)),
+                      errorBuilder: (_, __, ___) =>
+                          Container(color: const Color(0xFF1B2B6B)),
                     ),
                   Positioned(
                     left: 0,
@@ -477,7 +512,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Colors.black.withOpacity(0), Colors.black.withOpacity(0.55)],
+                          colors: [
+                            Colors.black.withOpacity(0),
+                            Colors.black.withOpacity(0.55)
+                          ],
                         ),
                       ),
                       child: Text(

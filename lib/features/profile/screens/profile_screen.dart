@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/widgets/skeletons/profile_screen_skeleton.dart';
 import '../../fees/screens/payment_history_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -199,7 +200,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF1B2B6B)))
+          ? const ProfileScreenSkeleton()
           : CustomScrollView(
               slivers: [
                 SliverAppBar(

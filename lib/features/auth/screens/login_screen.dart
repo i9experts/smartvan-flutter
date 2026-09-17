@@ -40,7 +40,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       } catch (e) {
         debugPrint('FCM token error: $e');
       }
-
       final response = await ApiService.post('/auth/login', {
         'email': _emailController.text.trim(),
         'password': _passwordController.text,
@@ -63,7 +62,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (fcmToken != null) {
           await prefs.setString('fcm_token', fcmToken);
         }
-
         if (mounted) context.go('/home');
       } else {
         _showError(
