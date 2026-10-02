@@ -231,6 +231,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+    await TokenStorage.clear();
     if (mounted) context.go('/login');
   }
 
