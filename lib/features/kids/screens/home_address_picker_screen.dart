@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomeAddressPickerResult {
   final double lat;
@@ -70,6 +71,35 @@ class _HomeAddressPickerScreenState extends State<HomeAddressPickerScreen> {
     }
   }
 
+  Future<void> _goToCurrentLocation() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        _showMessage('Please turn on location services');
+        return;
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        _showMessage('Location permission is required');
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition();
+      await _mapController?.animateCamera(
+        CameraUpdate.newLatLng(LatLng(pos.latitude, pos.longitude)),
+      );
+    } catch (_) {
+      _showMessage('Could not get current location');
+    }
+  }
+
+  void _showMessage(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,6 +142,25 @@ class _HomeAddressPickerScreenState extends State<HomeAddressPickerScreen> {
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back, color: Color(0xFF1B2B6B)),
                     onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Current location button
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Material(
+                  color: Colors.white,
+                  shape: const CircleBorder(),
+                  elevation: 3,
+                  child: IconButton(
+                    icon: const Icon(Icons.my_location, color: Color(0xFF1B2B6B)),
+                    onPressed: _goToCurrentLocation,
                   ),
                 ),
               ),
