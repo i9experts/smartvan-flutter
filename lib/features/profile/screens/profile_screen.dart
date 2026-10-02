@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/widgets/html_asset_screen.dart';
 import '../../../core/widgets/skeletons/profile_screen_skeleton.dart';
 import '../../fees/screens/payment_history_screen.dart';
 
@@ -159,6 +160,78 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
+  }
+
+  Future<void> _deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Delete Account',
+            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+        content: const Text(
+            'Are you sure you want to delete your account? This action is permanent and cannot be undone. All your data, including linked children and trip history, will be permanently removed.',
+            style: TextStyle(fontFamily: 'Poppins')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel',
+                style: TextStyle(color: Color(0xFF8A94A6), fontFamily: 'Poppins')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF4B4B),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Delete',
+                style: TextStyle(color: Colors.white, fontFamily: 'Poppins')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    // Blocking loading dialog while the request runs.
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const PopScope(
+        canPop: false,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+    );
+
+    String? error;
+    try {
+      final response = await ApiService.post('/auth/delete-account', {});
+      final code = response.statusCode ?? 0;
+      if (code < 200 || code >= 300) {
+        final data = response.data;
+        error = (data is Map ? data['message']?.toString() : null) ??
+            'Failed to delete account. Please try again.';
+      }
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      error = (data is Map ? data['message']?.toString() : null) ??
+          'Network error. Please check your connection and try again.';
+    } catch (_) {
+      error = 'Something went wrong. Please try again.';
+    }
+
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop(); // close loading dialog
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: const Color(0xFFFF4B4B)),
+      );
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    if (mounted) context.go('/login');
   }
 
   Future<void> _logout() async {
@@ -375,6 +448,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
                             ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: TextButton.icon(
+                            onPressed: _deleteAccount,
+                            icon: const Icon(Icons.delete_forever_outlined,
+                                color: Color(0xFFFF4B4B)),
+                            label: const Text('Delete Account',
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFFFF4B4B),
+                                    fontFamily: 'Poppins')),
                           ),
                         ),
                         const SizedBox(height: 32),
@@ -617,7 +704,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             label: 'Privacy Policy',
             color: const Color(0xFF8A94A6),
             hasArrow: true,
-            onTap: () => _launchUrl('https://smartvan.pk/privacy-policy'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const HtmlAssetScreen(
+                      title: 'Privacy Policy',
+                      assetPath: 'assets/html/privacy_policy.html')),
+            ),
           ),
           const Divider(height: 1, color: Color(0xFFEAECF0)),
           _buildSettingsItem(
@@ -625,7 +718,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             label: 'Help & Support',
             color: const Color(0xFFFFB800),
             hasArrow: true,
-            onTap: () => _launchUrl('https://app.smartvan.pk/support'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const HtmlAssetScreen(
+                      title: 'Help & Support',
+                      assetPath: 'assets/html/help_support.html')),
+            ),
           ),
           const Divider(height: 1, color: Color(0xFFEAECF0)),
           _buildSettingsItem(
