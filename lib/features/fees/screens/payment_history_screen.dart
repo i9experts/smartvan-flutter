@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/widgets/skeletons/payment_history_skeleton.dart';
+import '../fees_api.dart';
+import '../widgets/pay_online_sheet.dart';
+import '../widgets/receipt_sheet.dart';
 
 class PaymentHistoryScreen extends StatefulWidget {
   const PaymentHistoryScreen({super.key});
@@ -14,6 +17,8 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
   bool _isLoading = true;
   String _error = '';
   String _filterStatus = 'all';
+  /// Online methods enabled on the server (empty → pay driver/school).
+  List<PayMethod> _payMethods = const [];
 
   static const Color _navy = Color(0xFF1B2B6B);
   static const Color _yellow = Color(0xFFFFB800);
@@ -22,6 +27,27 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
   void initState() {
     super.initState();
     _loadPayments();
+    _loadPayMethods();
+  }
+
+  Future<void> _loadPayMethods() async {
+    try {
+      final m = await FeesApi.methods();
+      if (mounted) setState(() => _payMethods = m);
+    } catch (_) {
+      // online payment unavailable — keep the old instructions
+    }
+  }
+
+  Future<void> _payOnline(dynamic payment, String amountLabel) async {
+    final id = (payment['_id'] ?? payment['id'])?.toString();
+    if (id == null) return;
+    final paid = await PayOnlineSheet.show(context,
+        paymentId: id, amountLabel: amountLabel, methods: _payMethods);
+    if (paid == true && mounted) {
+      await _loadPayments();
+      if (mounted) await ReceiptSheet.show(context, id);
+    }
   }
 
   Future<void> _loadPayments() async {
@@ -111,6 +137,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
       case 'cash': return 'Cash';
       case 'jazzcash': return 'JazzCash';
       case 'easypaisa': return 'EasyPaisa';
+      case 'raast': return 'Raast';
       case 'bank_transfer': return 'Bank Transfer';
       case 'card': return 'Card';
       default: return 'Other';
@@ -359,8 +386,43 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
                 ],
                 if (receiptNumber.isNotEmpty)
                   _buildDetailRow(Icons.receipt_outlined, 'Receipt No.', receiptNumber),
+                if (status == 'paid' && (payment['_id'] ?? payment['id']) != null) ...[
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => ReceiptSheet.show(
+                          context, (payment['_id'] ?? payment['id']).toString()),
+                      icon: const Icon(Icons.receipt_long, size: 18),
+                      label: const Text('View receipt'),
+                    ),
+                  ),
+                ],
+                if ((status == 'pending' || status == 'overdue') && _payMethods.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _payOnline(payment, amount),
+                      icon: const Icon(Icons.account_balance_wallet_outlined),
+                      label: const Text('Pay online',
+                          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _navy,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 if (status == 'pending')
-                  _buildInfoBanner('Please pay your transport fee to the van driver or school admin.', _yellow),
+                  _buildInfoBanner(
+                      _payMethods.isNotEmpty
+                          ? 'Pay online above, or pay the van driver or school admin.'
+                          : 'Please pay your transport fee to the van driver or school admin.',
+                      _yellow),
                 if (status == 'overdue')
                   _buildInfoBanner('This payment is overdue. Please contact the school immediately.', const Color(0xFFE74C3C)),
               ],
