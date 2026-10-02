@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/storage/token_storage.dart';
@@ -33,6 +33,10 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   String? _currentKidName;
   String _vanStatus = 'En Route';
   String _eta = 'Calculating...';
+  /// This parent's kids on the current trip (for per-kid ETA).
+  Set<String> _myKidIds = {};
+  /// Driver SOS received on this trip (shown as a banner).
+  Map<String, dynamic>? _driverSos;
   String _driverName = 'Driver';
   String _vanNumber = 'SV-001';
   double _vanSpeed = 0.0;
@@ -60,6 +64,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     if (!mounted) return;
     if (_currentTripId != null) {
       _connectSocket();
+      // One initial ETA; after that the server pushes 'etaUpdate'.
+      _fetchEta();
     }
     _setupMarkers();
     if (mounted) setState(() => _isLoading = false);
@@ -93,6 +99,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
           if (kids.isNotEmpty) {
             _currentKidName = Map<String, dynamic>.from(kids.first)['name'];
           }
+          _myKidIds = kids
+              .whereType<Map>()
+              .map((k) => (k['id'] ?? k['kidId'])?.toString())
+              .whereType<String>()
+              .toSet();
           if (lastLoc != null) {
             final lat = lastLoc['lat'];
             final long = lastLoc['long'];
@@ -163,6 +174,34 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       }
     });
 
+    // Server pushes per-kid ETA after each van update (computed at most
+    // once a minute), so the app no longer calls the ETA API itself.
+    _socket!.on('etaUpdate', (data) {
+      if (data is! Map || !mounted) return;
+      final list = data['eta'];
+      if (list is! List) return;
+      final mine = list
+          .whereType<Map>()
+          .where((e) => _myKidIds.contains(e['kidId']?.toString()))
+          .toList();
+      if (mine.isEmpty) return;
+      mine.sort((a, b) =>
+          ((a['minutes'] as num?) ?? 999).compareTo((b['minutes'] as num?) ?? 999));
+      final m = (mine.first['minutes'] as num?)?.toInt();
+      final t = mine.first['etaTime']?.toString();
+      if (m == null) return;
+      setState(() => _eta = m <= 1
+          ? 'Arriving now'
+          : '$m min${t != null && t != 'N/A' ? ' ($t)' : ''}');
+    });
+
+    // Emergency raised by the driver (Phase 2 driver SOS).
+    _socket!.on('sosAlert', (data) {
+      if (data is! Map || !mounted) return;
+      if (data['source'] != 'driver') return;
+      setState(() => _driverSos = Map<String, dynamic>.from(data));
+    });
+
     _socket!.onDisconnect((_) {
       if (mounted) setState(() => _isConnected = false);
     });
@@ -207,7 +246,6 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       setState(() => _vanPosition = newPosition);
       _updateVanMarker();
       _animateCamera();
-      _fetchEta();
     });
 
     _socket!.connect();
@@ -242,6 +280,56 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   }
 
   double _toRad(double deg) => deg * (math.pi / 180);
+
+  Widget _buildDriverSosBanner() {
+    final schoolPhone = _tripData?['schoolContact']?.toString();
+    final driverPhone = _tripData?['driverPhoneNo']?.toString();
+    Widget call(String label, String? phone) => phone == null || phone.isEmpty
+        ? const SizedBox.shrink()
+        : TextButton(
+            onPressed: () => launchUrl(Uri(scheme: 'tel', path: phone)),
+            style: TextButton.styleFrom(foregroundColor: Colors.white),
+            child: Text(label),
+          );
+    return Material(
+      color: const Color(0xFFE53935),
+      borderRadius: BorderRadius.circular(14),
+      elevation: 6,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 10, 4, 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.white),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text('The driver raised an emergency alert',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Poppins')),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => setState(() => _driverSos = null),
+                ),
+              ],
+            ),
+            const Text('The school has been informed and has the van\'s location.',
+                style: TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'Poppins')),
+            Row(
+              children: [
+                call('Call school', schoolPhone),
+                call('Call driver', driverPhone),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Future<void> _fetchEta() async {
     if (_currentTripId == null) return;
@@ -470,6 +558,14 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                         zoomControlsEnabled: false,
                         mapToolbarEnabled: false,
                       ),
+
+                      if (_driverSos != null)
+                        Positioned(
+                          top: 12,
+                          left: 12,
+                          right: 12,
+                          child: _buildDriverSosBanner(),
+                        ),
 
                       // Map Controls
                       Positioned(
