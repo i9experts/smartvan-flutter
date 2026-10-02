@@ -33,7 +33,6 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
   File? _selectedImage;
   List<dynamic> _schools = [];
   String? _selectedSchoolId;
-  String? _selectedSchoolName;
   String _selectedGender = 'male';
   String? _selectedGrade;
 
@@ -575,9 +574,6 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
           onChanged: (value) {
             setState(() {
               _selectedSchoolId = value;
-              _selectedSchoolName = _schools
-                  .firstWhere((s) =>
-                      (s['_id'] ?? s['id']) == value)['schoolName'];
             });
           },
         ),
