@@ -26,7 +26,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isEditing = false;
   bool _isSaving = false;
   bool _notificationsEnabled = true;
-  String? _loadError;
   bool _locationEnabled = true;
   File? _selectedImage;
 
@@ -51,7 +50,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
-    setState(() => _loadError = null);
     try {
       final response = await ApiService.get('/auth/getProfile');
       if (response.statusCode == 200) {
@@ -65,12 +63,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _addressController.text = data['address'] ?? '';
         });
       }
-    } catch (e) {
-      String message = 'Could not load your profile.';
-      if (e is DioException && e.response?.data?['message'] != null) {
-        message = e.response!.data['message'].toString();
-      }
-      if (mounted) setState(() => _loadError = message);
+    } catch (_) {
+      // Profile fields simply stay empty; the form is still usable.
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
