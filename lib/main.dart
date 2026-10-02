@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/fcm_service.dart';
+import 'core/services/notification_router.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -32,6 +33,7 @@ class SmartVanApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
       routerConfig: appRouter,
+      scaffoldMessengerKey: scaffoldMessengerKey,
     );
   }
 }

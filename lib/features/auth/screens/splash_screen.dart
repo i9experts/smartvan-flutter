@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/storage/token_storage.dart';
+import '../../../core/services/notification_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -53,6 +54,10 @@ class _SplashScreenState extends State<SplashScreen>
     if (mounted) {
       if (loggedIn) {
         context.go('/home');
+        // Opened by tapping a notification while the app was closed.
+        final pending = NotificationRouter.pendingRoute;
+        NotificationRouter.pendingRoute = null;
+        if (pending != null) context.push(pending);
       } else {
         context.go('/onboarding');
       }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../storage/token_storage.dart';
 import '../network/api_service.dart';
+import 'notification_router.dart';
 
 class FCMService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -21,11 +22,25 @@ class FCMService {
 
     _messaging.onTokenRefresh.listen(_saveFCMToken);
 
+    // App open: show an in-app banner (safety alerts in red).
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        debugPrint('FCM: ${message.notification!.title}');
-      }
+      NotificationRouter.showForeground(
+        title: message.notification?.title,
+        body: message.notification?.body,
+        data: message.data,
+      );
     });
+
+    // Tapped while the app was in the background.
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      NotificationRouter.open(message.data);
+    });
+
+    // Tapped while the app was closed — splash opens it after login check.
+    final initial = await _messaging.getInitialMessage();
+    if (initial != null) {
+      NotificationRouter.pendingRoute = NotificationRouter.routeFor(initial.data);
+    }
   }
 
   static Future<void> _saveFCMToken(String token) async {
