@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../../core/storage/token_storage.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -50,10 +49,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _navigate() async {
     await Future.delayed(const Duration(seconds: 4));
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(AppConstants.tokenKey);
+    final loggedIn = await TokenStorage.hasToken();
     if (mounted) {
-      if (token != null) {
+      if (loggedIn) {
         context.go('/home');
       } else {
         context.go('/onboarding');

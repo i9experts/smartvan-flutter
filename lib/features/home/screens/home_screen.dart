@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/widgets/skeletons/home_screen_skeleton.dart';
 import '../../alerts/screens/alerts_screen.dart';
 import '../../kids/screens/kids_screen.dart';
 import '../../profile/screens/profile_screen.dart';
+import '../../../core/storage/token_storage.dart';
 import '../../tracking/screens/parent_tracking_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -121,8 +120,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     if (confirmed != true) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(AppConstants.tokenKey);
+    await TokenStorage.clear();
     if (mounted) context.go('/login');
   }
 

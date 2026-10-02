@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../../core/storage/token_storage.dart';
 import '../../../core/network/api_service.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
@@ -70,8 +70,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 data['token'] ??
                 data['access_token'] ??
                 '';
+            await TokenStorage.save(token.toString());
             final prefs = await SharedPreferences.getInstance();
-            await prefs.setString(AppConstants.tokenKey, token);
             await prefs.setString('user_type', 'parent');
             if (mounted) context.go('/home');
           } else {

@@ -5,6 +5,16 @@ plugins {
     id "com.google.gms.google-services"
 }
 
+// Google Maps key: android/local.properties (gitignored) MAPS_API_KEY=...
+// or the MAPS_API_KEY environment variable on CI.
+def localProps = new Properties()
+def localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) { localPropsFile.withInputStream { localProps.load(it) } }
+def mapsApiKey = localProps.getProperty("MAPS_API_KEY") ?: System.getenv("MAPS_API_KEY") ?: ""
+if (mapsApiKey.isEmpty()) {
+    logger.warn("MAPS_API_KEY is not set — Google Maps will show a blank map.")
+}
+
 def keyPropertiesFile = rootProject.file("key.properties")
 def keyProperties = new Properties()
 keyProperties.load(new FileInputStream(keyPropertiesFile))
@@ -38,6 +48,7 @@ android {
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders = [MAPS_API_KEY: mapsApiKey]
     }
 
     buildTypes {

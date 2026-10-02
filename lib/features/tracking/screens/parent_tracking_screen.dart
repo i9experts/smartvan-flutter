@@ -7,6 +7,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/storage/token_storage.dart';
 import '../../../core/widgets/skeletons/tracking_screen_skeleton.dart';
 
 class TrackingScreen extends ConsumerStatefulWidget {
@@ -138,8 +139,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   }
 
   void _connectSocket() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(AppConstants.tokenKey) ?? '';
+    final token = await TokenStorage.read() ?? '';
 
     _socket = IO.io(
       AppConstants.socketUrl,

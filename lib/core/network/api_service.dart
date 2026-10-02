@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../storage/token_storage.dart';
 import '../constants/app_constants.dart';
 
 class ApiService {
@@ -19,9 +20,10 @@ class ApiService {
     return await SharedPreferences.getInstance();
   }
 
+  // Header is set right before each request from secure storage, so a
+  // logout can't leave the previous parent's token on the client.
   static Future<void> _addAuthHeader() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(AppConstants.tokenKey);
+    final token = await TokenStorage.read();
     if (token != null && token.isNotEmpty) {
       _dio.options.headers['Authorization'] = 'Bearer $token';
     } else {
@@ -94,8 +96,7 @@ class ApiService {
   /// Use this BEFORE calling addKid/update-profile/etc — those endpoints
   /// expect `image` as a plain string URL, not a raw file.
   static Future<String?> uploadImage(File file) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(AppConstants.tokenKey);
+    final token = await TokenStorage.read();
 
     final uploadDio = Dio();
     try {

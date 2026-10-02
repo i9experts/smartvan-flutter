@@ -6,9 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 import 'dart:io';
-import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/widgets/skeletons/profile_screen_skeleton.dart';
+import '../../../core/storage/token_storage.dart';
 import '../../fees/screens/payment_history_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -179,8 +179,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.remove(AppConstants.tokenKey);
+              await TokenStorage.clear();
               if (mounted) context.go('/login');
             },
             style: ElevatedButton.styleFrom(

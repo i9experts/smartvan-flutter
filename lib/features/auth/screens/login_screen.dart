@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/storage/token_storage.dart';
 import '../../../core/services/fcm_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -53,8 +53,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             data['token'] ??
             data['access_token'] ??
             '';
+        await TokenStorage.save(token.toString());
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(AppConstants.tokenKey, token);
         await prefs.setString('user_type', 'parent');
 
         // FCM token was already sent as part of the /auth/login request

@@ -1,7 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../constants/app_constants.dart';
+import '../storage/token_storage.dart';
 import '../network/api_service.dart';
 
 class FCMService {
@@ -31,8 +31,7 @@ class FCMService {
   static Future<void> _saveFCMToken(String token) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final authToken = prefs.getString(AppConstants.tokenKey);
-      if (authToken != null) {
+      if (await TokenStorage.hasToken()) {
         await ApiService.post('/auth/updateFcmToken', {
           'fcmToken': token,
         });
