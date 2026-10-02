@@ -6,6 +6,8 @@ import 'dart:io';
 import '../../../core/network/api_service.dart';
 import '../../../core/widgets/skeletons/kids_screen_skeleton.dart';
 import 'home_address_picker_screen.dart';
+import '../../../core/network/api_errors.dart';
+import '../../chat/chat_api.dart';
 import 'add_kid_screen.dart' show kGradeLevels;
 
 class KidsScreen extends ConsumerStatefulWidget {
@@ -361,6 +363,12 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   onTap: () => context.go('/tracking'),
                 ),
                 _buildActionButton(
+                  icon: Icons.chat_bubble_outline,
+                  label: 'Message',
+                  color: const Color(0xFF27AE60),
+                  onTap: () => _messageDriver(kid),
+                ),
+                _buildActionButton(
                   icon: Icons.history,
                   label: 'History',
                   color: const Color(0xFF8A94A6),
@@ -384,6 +392,25 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
         ],
       ),
     );
+  }
+
+  /// Opens the chat with this kid's van driver.
+  Future<void> _messageDriver(Map<String, dynamic> kid) async {
+    final kidId = (kid['_id'] ?? kid['id'] ?? kid['kidId'])?.toString();
+    if (kidId == null) return;
+    try {
+      final conversation = await ChatApi.start(kidId);
+      if (mounted) await context.push('/chat', extra: conversation);
+    } catch (e) {
+      if (!mounted) return;
+      final noVan = ApiErrors.code(e) == 'NO_VAN' || ApiErrors.code(e) == 'NO_DRIVER';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(noVan
+            ? 'No van driver is assigned to ${kid['fullname'] ?? 'this child'} yet.'
+            : ApiErrors.message(e, fallback: 'Could not open chat.')),
+        behavior: SnackBarBehavior.floating,
+      ));
+    }
   }
 
   Widget _buildAvatarFallback(String name) {

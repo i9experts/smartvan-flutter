@@ -8,6 +8,7 @@ import '../../alerts/screens/alerts_screen.dart';
 import '../../kids/screens/kids_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 import '../../../core/storage/token_storage.dart';
+import '../../chat/chat_api.dart';
 import '../../tracking/screens/parent_tracking_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -31,7 +32,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _loadData();
   }
 
+  int _chatUnread = 0;
+
+  Future<void> _loadChatUnread() async {
+    try {
+      final n = await ChatApi.unread();
+      if (mounted) setState(() => _chatUnread = n);
+    } catch (_) {
+      // chat not available — icon without badge
+    }
+  }
+
   Future<void> _loadData() async {
+    _loadChatUnread();
     await Future.wait([
       _loadProfile(),
       _loadKids(),
@@ -253,6 +266,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             Row(
                               children: [
+                                IconButton(
+                                  tooltip: 'Messages',
+                                  onPressed: () async {
+                                    await context.push('/chats');
+                                    _loadChatUnread();
+                                  },
+                                  icon: Badge(
+                                    isLabelVisible: _chatUnread > 0,
+                                    label: Text('$_chatUnread'),
+                                    backgroundColor: const Color(0xFF27AE60),
+                                    child: const Icon(Icons.chat_bubble_outline,
+                                        color: Colors.white, size: 24),
+                                  ),
+                                ),
                                 IconButton(
                                   onPressed: () =>
                                       setState(() => _currentIndex = 3),

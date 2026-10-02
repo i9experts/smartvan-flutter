@@ -15,6 +15,9 @@ import '../../features/alerts/screens/alerts_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/change_password_screen.dart';
 import '../../features/fees/screens/payment_history_screen.dart';
+import '../../features/chat/chat_api.dart';
+import '../../features/chat/screens/chat_screen.dart';
+import '../../features/chat/screens/conversations_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -86,6 +89,19 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/change-password',
       builder: (context, state) => const ChangePasswordScreen(),
+    ),
+    GoRoute(
+      path: '/payment-history',
+      builder: (context, state) => const PaymentHistoryScreen(),
+    ),
+    GoRoute(
+      path: '/chats',
+      builder: (context, state) => const ConversationsScreen(),
+    ),
+    GoRoute(
+      path: '/chat',
+      builder: (context, state) =>
+          ChatScreen(conversation: state.extra as Conversation),
     ),
   ],
 );
