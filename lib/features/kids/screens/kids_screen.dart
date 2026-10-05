@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../core/network/api_service.dart';
+import '../../../core/widgets/skeletons/kids_screen_skeleton.dart';
 import 'home_address_picker_screen.dart';
 import 'add_kid_screen.dart' show kGradeLevels;
 
@@ -106,25 +107,22 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
           ),
           Expanded(
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                        color: Color(0xFF1B2B6B)),
-                  )
+                ? const KidsScreenSkeleton()
                 : _hasError && _kids.isEmpty
                     ? _buildErrorState()
                     : _kids.isEmpty
                         ? _buildEmptyState()
                         : RefreshIndicator(
-                        onRefresh: _loadKids,
-                        color: const Color(0xFF1B2B6B),
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(20),
-                          itemCount: _kids.length,
-                          itemBuilder: (context, index) {
-                            return _buildKidCard(_kids[index]);
-                          },
-                        ),
-                      ),
+                            onRefresh: _loadKids,
+                            color: const Color(0xFF1B2B6B),
+                            child: ListView.builder(
+                              padding: const EdgeInsets.all(20),
+                              itemCount: _kids.length,
+                              itemBuilder: (context, index) {
+                                return _buildKidCard(_kids[index]);
+                              },
+                            ),
+                          ),
           ),
         ],
       ),
@@ -143,8 +141,8 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
               color: const Color(0xFFFF4B4B).withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.wifi_off_rounded, size: 50,
-                color: Color(0xFFFF4B4B)),
+            child: const Icon(Icons.wifi_off_rounded,
+                size: 50, color: Color(0xFFFF4B4B)),
           ),
           const SizedBox(height: 24),
           const Text(
@@ -193,8 +191,8 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
               color: const Color(0xFF1B2B6B).withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.child_care, size: 50,
-                color: Color(0xFF1B2B6B)),
+            child: const Icon(Icons.child_care,
+                size: 50, color: Color(0xFF1B2B6B)),
           ),
           const SizedBox(height: 24),
           const Text(
@@ -280,7 +278,8 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   ),
                   child: ClipOval(
                     child: image != null
-                        ? Image.network(image, fit: BoxFit.cover,
+                        ? Image.network(image,
+                            fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) =>
                                 _buildAvatarFallback(name))
                         : _buildAvatarFallback(name),
@@ -547,8 +546,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
   }
 
   void _showEditKid(Map<String, dynamic> kid) {
-    final nameController =
-        TextEditingController(text: kid['fullname'] ?? '');
+    final nameController = TextEditingController(text: kid['fullname'] ?? '');
     final ageController =
         TextEditingController(text: kid['age']?.toString() ?? '');
     final addressController =
@@ -758,8 +756,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                                             color: Color(0xFF8A94A6),
                                             fontFamily: 'Poppins',
                                             fontSize: 13)),
-                                    icon: const Icon(
-                                        Icons.keyboard_arrow_down,
+                                    icon: const Icon(Icons.keyboard_arrow_down,
                                         color: Color(0xFF1B2B6B)),
                                     items: kGradeLevels
                                         .map<DropdownMenuItem<String>>(
@@ -767,8 +764,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                                                   value: grade,
                                                   child: Text(grade,
                                                       style: const TextStyle(
-                                                          fontFamily:
-                                                              'Poppins',
+                                                          fontFamily: 'Poppins',
                                                           fontSize: 13,
                                                           color: Color(
                                                               0xFF1A1A2E))),
@@ -994,11 +990,10 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Remove Kid',
-            style: TextStyle(
-                fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+            style:
+                TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
         content: Text(
             'Are you sure you want to remove ${kid['fullname'] ?? 'this kid'}?',
             style: const TextStyle(fontFamily: 'Poppins')),
@@ -1006,8 +1001,8 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel',
-                style: TextStyle(
-                    color: Color(0xFF8A94A6), fontFamily: 'Poppins')),
+                style:
+                    TextStyle(color: Color(0xFF8A94A6), fontFamily: 'Poppins')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -1017,8 +1012,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   borderRadius: BorderRadius.circular(8)),
             ),
             child: const Text('Remove',
-                style:
-                    TextStyle(color: Colors.white, fontFamily: 'Poppins')),
+                style: TextStyle(color: Colors.white, fontFamily: 'Poppins')),
           ),
         ],
       ),
@@ -1027,8 +1021,8 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
     if (confirmed == true) {
       try {
         final kidId = kid['_id'] ?? kid['id'];
-        final response = await ApiService.post(
-            '/kid/deleteKidByParent', {'kidId': kidId});
+        final response =
+            await ApiService.post('/kid/deleteKidByParent', {'kidId': kidId});
         // ApiService treats any 4xx as a normal (non-throwing) response, so
         // this used to show "success" even on a rejected delete.
         if (response.statusCode != 200 && response.statusCode != 201) {

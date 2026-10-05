@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/widgets/skeletons/alerts_screen_skeleton.dart';
 
 class AlertsScreen extends ConsumerStatefulWidget {
   const AlertsScreen({super.key});
@@ -141,7 +142,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
           ),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF1B2B6B)))
+                ? const AlertsScreenSkeleton()
                 : TabBarView(
                     controller: _tabController,
                     children: [

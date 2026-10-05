@@ -125,7 +125,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                      icon:
+                          const Icon(Icons.arrow_back_ios, color: Colors.white),
                       onPressed: () => context.go('/login'),
                     ),
                     const Text(

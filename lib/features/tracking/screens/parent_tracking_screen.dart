@@ -7,6 +7,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/widgets/skeletons/tracking_screen_skeleton.dart';
 
 class TrackingScreen extends ConsumerStatefulWidget {
   const TrackingScreen({super.key});
@@ -53,7 +54,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 
   Future<void> _initTracking() async {
     await _loadTripData();
+    if (!mounted) return;
     await _loadHomeLocation();
+    if (!mounted) return;
     if (_currentTripId != null) {
       _connectSocket();
     }
@@ -64,6 +67,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   Future<void> _loadTripData() async {
     try {
       final response = await ApiService.get('/kid/getActiveTripDetails');
+      if (!mounted) return;
       if (response.statusCode == 200 && response.data != null) {
         final raw = response.data;
         final trips = (raw['data'] ?? []) as List;
@@ -103,7 +107,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         setState(() => _noActiveTrip = true);
       }
     } catch (e) {
-      setState(() => _noActiveTrip = true);
+      if (mounted) setState(() => _noActiveTrip = true);
     }
   }
 
@@ -120,7 +124,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             orElse: () => {},
           );
 
-      if (kidWithHome.isNotEmpty) {
+      if (kidWithHome.isNotEmpty && mounted) {
         setState(() {
           _homePosition = LatLng(
             (kidWithHome['homeLat'] as num).toDouble(),
@@ -199,6 +203,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       final newPosition = LatLng(lat, long);
       _updateSpeed(newPosition);
 
+      if (!mounted) return;
       setState(() => _vanPosition = newPosition);
       _updateVanMarker();
       _animateCamera();
@@ -267,6 +272,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   }
 
   void _setupMarkers() {
+    if (!mounted) return;
     setState(() {
       _markers = {
         Marker(
@@ -321,6 +327,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       ),
     );
 
+    if (!mounted) return;
     setState(() {
       _markers = updatedMarkers;
       _polylines = {
@@ -441,10 +448,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
           // Map
           Expanded(
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                        color: Color(0xFF1B2B6B)),
-                  )
+                ? const TrackingScreenSkeleton()
                 : _noActiveTrip
                     ? _buildNoActiveTripState()
                     : Stack(

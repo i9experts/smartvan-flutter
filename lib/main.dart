@@ -22,10 +22,12 @@ void main() async {
   if (!kIsWeb) {
     try {
       await Firebase.initializeApp();
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      FirebaseMessaging.onBackgroundMessage(
+          _firebaseMessagingBackgroundHandler);
       await FCMService.initialize();
     } catch (e) {
-      debugPrint('Firebase init failed, continuing without push notifications: $e');
+      debugPrint(
+          'Firebase init failed, continuing without push notifications: $e');
     }
   }
   runApp(const ProviderScope(child: SmartVanApp()));
