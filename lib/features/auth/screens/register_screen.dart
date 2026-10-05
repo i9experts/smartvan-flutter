@@ -72,8 +72,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           });
         }
       } else {
-        _showError(response.data?['message']?.toString() ??
-            'Registration failed. Try again.');
+        // ApiService treats any 4xx as a normal (non-throwing) response, so
+        // a validation failure (e.g. duplicate email) would otherwise just
+        // reset the spinner with no explanation at all.
+        final message = response.data is Map
+            ? (response.data['message'] ?? 'Registration failed. Try again.')
+            : 'Registration failed. Try again.';
+        _showError(message.toString());
       }
     } on DioException catch (e) {
       final message =
@@ -118,7 +123,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                      icon:
+                          const Icon(Icons.arrow_back_ios, color: Colors.white),
                       onPressed: () => context.go('/login'),
                     ),
                     const Text(
@@ -412,8 +418,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           fontSize: 14,
           fontFamily: 'Poppins',
         ),
-        prefixIcon:
-            const Icon(Icons.lock_outlined, color: Color(0xFF1B2B6B)),
+        prefixIcon: const Icon(Icons.lock_outlined, color: Color(0xFF1B2B6B)),
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,

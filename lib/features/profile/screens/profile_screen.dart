@@ -28,6 +28,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   String? _loadError;
   bool _locationEnabled = true;
   File? _selectedImage;
+  // The backend's getProfile response has no kidsCount/tripsCount/alertsCount
+  // fields at all, so these were always reading undefined and showing "0" —
+  // fetched from their real endpoints instead.
+  int? _kidsCount;
+  int? _tripsCount;
+  int? _alertsCount;
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -38,6 +44,69 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void initState() {
     super.initState();
     _loadProfile();
+    _loadStats();
+  }
+
+  Future<void> _setNotificationToggle(bool value) async {
+    final previous = _notificationsEnabled;
+    setState(() => _notificationsEnabled = value);
+    try {
+      final response = await ApiService.post('/auth/change-notification-toggle', {
+        'notificationToggle': value,
+      });
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to update notification setting');
+      }
+    } catch (e) {
+      // Revert — the switch would otherwise silently drift from what the
+      // backend (and therefore actual push delivery) is really set to.
+      if (mounted) {
+        setState(() => _notificationsEnabled = previous);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update notification setting'),
+            backgroundColor: Color(0xFFFF4B4B),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadStats() async {
+    try {
+      final kidsResponse = await ApiService.get('/kid/getKids');
+      if (kidsResponse.statusCode == 200) {
+        final raw = kidsResponse.data;
+        final data = raw is Map ? raw['data'] : raw;
+        if (mounted) setState(() => _kidsCount = data is List ? data.length : 0);
+      }
+    } catch (e) {}
+
+    try {
+      final tripsResponse = await ApiService.get('/kid/getTripHistory?limit=1');
+      if (tripsResponse.statusCode == 200) {
+        final raw = tripsResponse.data;
+        final data = raw is Map ? raw['data'] : null;
+        if (mounted) {
+          setState(() => _tripsCount = data is Map ? (data['total'] as num?)?.toInt() ?? 0 : 0);
+        }
+      }
+    } catch (e) {}
+
+    try {
+      final alertsResponse = await ApiService.get('/alert/getDriverNotificationByParent');
+      if (alertsResponse.statusCode == 200) {
+        final raw = alertsResponse.data;
+        final inner = raw is Map ? raw['data'] : null;
+        final notifications = inner is Map
+            ? (inner['notifications'] ?? inner['alerts'] ?? [])
+            : (inner is List ? inner : []);
+        if (mounted) {
+          setState(() => _alertsCount = notifications is List ? notifications.length : 0);
+        }
+      }
+    } catch (e) {}
   }
 
   @override
@@ -62,6 +131,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _emailController.text = data['email'] ?? '';
           _phoneController.text = data['phoneNo'] ?? data['phone'] ?? '';
           _addressController.text = data['address'] ?? '';
+          _notificationsEnabled = data['notificationToggle'] ?? true;
         });
       }
     } catch (e) {
@@ -409,13 +479,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget _buildStatsRow() {
     return Row(
       children: [
-        _buildStatCard('Kids', _profile?['kidsCount']?.toString() ?? '0',
+        _buildStatCard('Kids', _kidsCount?.toString() ?? '—',
             Icons.child_care, const Color(0xFF1B2B6B)),
         const SizedBox(width: 12),
-        _buildStatCard('Trips', _profile?['tripsCount']?.toString() ?? '0',
+        _buildStatCard('Trips', _tripsCount?.toString() ?? '—',
             Icons.directions_bus, const Color(0xFFFFB800)),
         const SizedBox(width: 12),
-        _buildStatCard('Alerts', _profile?['alertsCount']?.toString() ?? '0',
+        _buildStatCard('Alerts', _alertsCount?.toString() ?? '—',
             Icons.notifications, const Color(0xFFFF4B4B)),
       ],
     );
@@ -579,7 +649,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             color: const Color(0xFF1B2B6B),
             hasSwitch: true,
             value: _notificationsEnabled,
-            onSwitch: (val) => setState(() => _notificationsEnabled = val),
+            onSwitch: (val) => _setNotificationToggle(val),
           ),
           const Divider(height: 1, color: Color(0xFFEAECF0)),
           _buildSettingsItem(
@@ -588,6 +658,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             color: const Color(0xFF27AE60),
             hasSwitch: true,
             value: _locationEnabled,
+            // This is a device OS permission, not a server-side setting —
+            // there is no backend endpoint for it (unlike notifications
+            // below). Flipping this here doesn't actually grant/revoke
+            // location access; it's UI-only until wired to a real
+            // permission_handler request.
             onSwitch: (val) => setState(() => _locationEnabled = val),
           ),
           const Divider(height: 1, color: Color(0xFFEAECF0)),

@@ -33,6 +33,13 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
         setState(() {
           _payments = data is List ? data : (data['data'] ?? []);
         });
+      } else {
+        // ApiService treats any 4xx as a normal (non-throwing) response, so
+        // an expired token or backend error here used to render as an
+        // innocent "No Payments Found" — risky for a money-related screen,
+        // since a parent could believe they have no fees due when the
+        // request actually just failed.
+        setState(() => _error = 'Failed to load payment history');
       }
     } catch (e) {
       setState(() => _error = 'Failed to load payment history');

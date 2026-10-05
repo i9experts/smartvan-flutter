@@ -75,8 +75,13 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           );
         }
       } else {
-        _showError(
-            response.data?['message']?.toString() ?? 'Reset failed. Try again.');
+        // ApiService treats any 4xx as a normal (non-throwing) response, so
+        // an expired OTP would otherwise just reset the spinner with no
+        // explanation.
+        final message = response.data is Map
+            ? (response.data['message'] ?? 'Reset failed. Try again.')
+            : 'Reset failed. Try again.';
+        _showError(message.toString());
       }
     } on DioException catch (e) {
       final message =
@@ -120,7 +125,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                      icon:
+                          const Icon(Icons.arrow_back_ios, color: Colors.white),
                       onPressed: () => context.go('/login'),
                     ),
                     const Text(

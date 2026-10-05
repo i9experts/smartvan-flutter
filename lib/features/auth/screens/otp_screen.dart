@@ -52,9 +52,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final endpoint = widget.isRegistration
-          ? '/auth/verifyOtp'
-          : '/auth/verifyOtpForgot';
+      final endpoint =
+          widget.isRegistration ? '/auth/verifyOtp' : '/auth/verifyOtpForgot';
 
       final response = await ApiService.post(endpoint, {
         'email': widget.phone,
@@ -83,8 +82,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           }
         }
       } else {
-        _showError(
-            response.data?['message']?.toString() ?? 'Invalid OTP. Try again.');
+        // ApiService treats any 4xx as a normal (non-throwing) response, so
+        // a wrong/expired OTP would otherwise just reset the spinner with
+        // no explanation and no way to tell the code was rejected.
+        final message = response.data is Map
+            ? (response.data['message'] ?? 'Invalid OTP. Try again.')
+            : 'Invalid OTP. Try again.';
+        _showError(message.toString());
       }
     } on DioException catch (e) {
       final message = e.response?.data?['message'] ?? 'Invalid OTP. Try again.';
@@ -105,24 +109,31 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           ? '/auth/resend-otp'
           : '/auth/resend-otp-reset-password';
 
-      await ApiService.post(resendEndpoint, {
+      final response = await ApiService.post(resendEndpoint, {
         'email': widget.phone,
         'userType': widget.userType,
       });
 
-      setState(() => _resendSeconds = 60);
-      _startTimer();
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        setState(() => _resendSeconds = 60);
+        _startTimer();
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('OTP resent successfully!'),
-            backgroundColor: const Color(0xFF27AE60),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('OTP resent successfully!'),
+              backgroundColor: const Color(0xFF27AE60),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
+      } else {
+        final message = response.data is Map
+            ? (response.data['message'] ?? 'Failed to resend OTP. Try again.')
+            : 'Failed to resend OTP. Try again.';
+        _showError(message.toString());
       }
     } catch (e) {
       _showError('Failed to resend OTP. Try again.');
@@ -162,7 +173,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                      icon:
+                          const Icon(Icons.arrow_back_ios, color: Colors.white),
                       onPressed: () => context.go('/register'),
                     ),
                     const Text(

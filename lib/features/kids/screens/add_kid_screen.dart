@@ -156,6 +156,14 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
           );
           context.go('/home');
         }
+      } else {
+        // ApiService treats any 4xx as a normal (non-throwing) response, so
+        // e.g. a duplicate kid name would otherwise just reset the spinner
+        // with no explanation.
+        final message = response.data is Map
+            ? (response.data['message'] ?? 'Failed to add kid. Try again.')
+            : 'Failed to add kid. Try again.';
+        _showError(message.toString());
       }
     } on DioException catch (e) {
       final message =
