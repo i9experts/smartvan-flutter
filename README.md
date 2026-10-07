@@ -28,3 +28,12 @@ Backend contract: `docs/PHASE3_API.md` in the `smartvan` repo.
 - **Chat** (`lib/features/chat/`): message the van driver; quick replies.
 - **Fees** (`lib/features/fees/`): pay online (JazzCash / Easypaisa / Raast;
   test mode with `PAYMENTS_MODE=mock`) and shareable receipts.
+
+## Phase 4 (parent app)
+
+Backend contract: `docs/PHASE4_API.md` in the `smartvan` repo.
+
+- **Absent**: kid card → mark absent for today / tomorrow / a date
+  (whole day, pickup or drop) with a note; cancel upcoming absences.
+- Notifications for "Van is at your stop" and "Van has left your stop".
+- Firebase Crashlytics (release builds).
