@@ -8,6 +8,7 @@ import '../../../core/widgets/skeletons/kids_screen_skeleton.dart';
 import 'home_address_picker_screen.dart';
 import '../../../core/network/api_errors.dart';
 import '../../chat/chat_api.dart';
+import '../widgets/absence_sheet.dart';
 import 'add_kid_screen.dart' show kGradeLevels;
 
 class KidsScreen extends ConsumerStatefulWidget {
@@ -371,6 +372,17 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   label: 'Message',
                   color: const Color(0xFF27AE60),
                   onTap: () => _messageDriver(kid),
+                ),
+                _buildActionButton(
+                  icon: Icons.event_busy,
+                  label: 'Absent',
+                  color: const Color(0xFF6C5CE7),
+                  onTap: () {
+                    final kidId = (kid['_id'] ?? kid['id'])?.toString();
+                    if (kidId == null) return;
+                    AbsenceSheet.show(context,
+                        kidId: kidId, kidName: kid['fullname']?.toString() ?? 'Your child');
+                  },
                 ),
                 _buildActionButton(
                   icon: Icons.history,

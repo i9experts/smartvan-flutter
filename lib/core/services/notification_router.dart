@@ -13,16 +13,16 @@ class NotificationRouter {
   static String? pendingRoute;
 
   /// Safety alerts that must stand out even in the foreground.
-  static const _urgentTypes = {'driver_sos', 'drop_not_confirmed'};
+  static const _urgentTypes = {'driver_sos', 'drop_not_confirmed', 'NO_SHOW'};
 
   static String? routeFor(Map<String, dynamic> data) {
     final type = data['type']?.toString() ?? '';
     if (type == 'CHAT_MESSAGE') return '/chats';
     if (type == 'PAYMENT_RECEIVED') return '/payment-history';
-    if (type == 'driver_sos' || type == 'ETA_UPDATE' || type.startsWith('GEOFENCE_')) {
+    if (type == 'driver_sos' || type == 'ETA_UPDATE' || type == 'VAN_AT_STOP' || type.startsWith('GEOFENCE_')) {
       return '/tracking';
     }
-    if (type == 'drop_not_confirmed') return '/alerts';
+    if (type == 'drop_not_confirmed' || type == 'NO_SHOW') return '/alerts';
     return null;
   }
 
