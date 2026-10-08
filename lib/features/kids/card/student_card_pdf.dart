@@ -64,7 +64,7 @@ class StudentCardPdf {
             'Cut along the dashed line and laminate.'
             '${card.image == null ? '\nStick a passport-size photo in the photo box.' : ''}',
             textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(fontSize: 9, color: PdfColors.grey700, lineSpacing: 2),
+            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700, lineSpacing: 2),
           ),
         ],
       ),
@@ -86,7 +86,7 @@ class StudentCardPdf {
       decoration: pw.BoxDecoration(
         color: PdfColors.white,
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3 * _mm)),
-        border: pw.Border.all(color: PdfColor.fromInt(0xFFD9DEEA), width: 0.25 * _mm),
+        border: pw.Border.all(color: const PdfColor.fromInt(0xFFD9DEEA), width: 0.25 * _mm),
       ),
       child: pw.ClipRRect(
         horizontalRadius: 3 * _mm,
@@ -213,7 +213,7 @@ class StudentCardPdf {
       child: pw.RichText(
         maxLines: maxLines,
         text: pw.TextSpan(
-          style: pw.TextStyle(fontSize: 2.2 * _mm, color: _text),
+          style: const pw.TextStyle(fontSize: 2.2 * _mm, color: _text),
           children: [
             pw.TextSpan(text: '$label: ', style: pw.TextStyle(font: bold, color: _blue)),
             pw.TextSpan(text: value),
