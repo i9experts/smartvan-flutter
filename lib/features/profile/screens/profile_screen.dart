@@ -266,6 +266,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   pinned: true,
                   automaticallyImplyLeading: false,
                   backgroundColor: const Color(0xFF1B2B6B),
+                  surfaceTintColor: Colors.transparent,
+                  // When the big header collapses, show a title instead of
+                  // an empty blue bar.
+                  title: LayoutBuilder(builder: (context, _) {
+                    final settings = context.dependOnInheritedWidgetOfExactType<FlexibleSpaceBarSettings>();
+                    final collapsed = settings == null ||
+                        settings.currentExtent <= settings.minExtent + 8;
+                    return AnimatedOpacity(
+                      opacity: collapsed ? 1 : 0,
+                      duration: const Duration(milliseconds: 150),
+                      child: const Text(
+                        'My Profile',
+                        style: TextStyle(color: Colors.white, fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 18),
+                      ),
+                    );
+                  }),
                   actions: [
                     if (!_isEditing)
                       IconButton(

@@ -24,6 +24,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<dynamic> _kids = [];
   List<dynamic> _alerts = [];
   List<dynamic> _banners = [];
+  /// Today's trips that are in progress for this parent's kids.
+  List<dynamic> _activeTrips = [];
   bool _isLoading = true;
 
   @override
@@ -50,6 +52,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _loadKids(),
       _loadAlerts(),
       _loadBanners(),
+      _loadActiveTrips(),
     ]);
     if (mounted) setState(() => _isLoading = false);
   }
@@ -68,8 +71,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _loadProfile() async {
     try {
       final response = await ApiService.get('/auth/getProfile');
-      if (response.statusCode == 200) {
-        setState(() => _profile = response.data);
+      if (response.statusCode == 200 && mounted) {
+        // The API wraps the user in { data: ... }; older builds read the
+        // wrapper itself, so the name/photo never showed.
+        final raw = response.data;
+        final user = raw is Map && raw['data'] is Map ? raw['data'] : raw;
+        setState(() => _profile = user is Map ? Map<String, dynamic>.from(user) : null);
       }
     } catch (e) {}
   }
@@ -77,22 +84,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _loadKids() async {
     try {
       final response = await ApiService.get('/kid/getKids');
-      if (response.statusCode == 200) {
-        final data = response.data;
-        setState(() => _kids = data is List ? data : (data['kids'] ?? []));
+      if (response.statusCode == 200 && mounted) {
+        // Response is { message, data: [kids] } — reading data['kids'] always
+        // gave an empty list, so Home said "No kids added yet".
+        final raw = response.data;
+        final list = raw is List ? raw : (raw is Map ? (raw['data'] ?? raw['kids']) : null);
+        setState(() => _kids = list is List ? list : []);
       }
-    } catch (e) {}
+    } catch (_) {
+      // keep whatever was shown
+    }
+  }
+
+  Future<void> _loadActiveTrips() async {
+    try {
+      final response = await ApiService.get('/kid/getActiveTripDetails');
+      if (response.statusCode == 200 && mounted) {
+        final raw = response.data;
+        final list = raw is Map ? raw['data'] : raw;
+        setState(() => _activeTrips = list is List ? list : []);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _activeTrips = []);
+    }
   }
 
   Future<void> _loadAlerts() async {
     try {
       final response =
           await ApiService.get('/alert/getDriverNotificationByParent');
-      if (response.statusCode == 200) {
-        final data = response.data;
-        setState(() => _alerts = data is List ? data : (data['alerts'] ?? []));
+      if (response.statusCode == 200 && mounted) {
+        // Response is { message, data: { notifications: [...] } } (newest
+        // first); data['alerts'] never existed, so Recent Alerts was empty.
+        final raw = response.data;
+        final inner = raw is Map ? raw['data'] : raw;
+        final list = inner is List
+            ? inner
+            : (inner is Map ? (inner['notifications'] ?? inner['alerts']) : null);
+        setState(() => _alerts = list is List ? list : []);
       }
-    } catch (e) {}
+    } catch (_) {
+      // keep whatever was shown
+    }
   }
 
   Future<void> _logout() async {
@@ -164,36 +197,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildHome() {
-    final name = _profile?['name'] ?? 'Parent';
-    final firstName = name.toString().split(' ').first;
+    final name = _profile?['fullname'] ?? _profile?['name'] ?? 'Parent';
+    final firstName = name.toString().trim().split(' ').first;
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12 ? 'Good Morning' : (hour < 17 ? 'Good Afternoon' : 'Good Evening');
+    final photo = (_profile?['image'] ?? _profile?['profileImage'])?.toString();
 
     return RefreshIndicator(
       onRefresh: _loadData,
       color: const Color(0xFF1B2B6B),
       child: CustomScrollView(
         slivers: [
+          // Pinned header: the greeting row lives in the toolbar itself, so it
+          // stays visible while scrolling (it used to sit in a collapsing
+          // FlexibleSpaceBar background, leaving an empty blue bar).
           SliverAppBar(
-            expandedHeight: 90,
-            floating: false,
             pinned: true,
-            backgroundColor: const Color(0xFF1B2B6B),
+            toolbarHeight: 76,
+            titleSpacing: 20,
             automaticallyImplyLeading: false,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF1B2B6B), Color(0xFF2D4099)],
-                  ),
+            backgroundColor: const Color(0xFF1B2B6B),
+            surfaceTintColor: Colors.transparent,
+            scrolledUnderElevation: 2,
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1B2B6B), Color(0xFF2D4099)],
                 ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+              ),
+            ),
+            title: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Expanded(
@@ -211,9 +246,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       color: Colors.white.withOpacity(0.2),
                                     ),
                                     child: ClipOval(
-                                      child: _profile?['profileImage'] != null
+                                      child: photo != null && photo.isNotEmpty
                                           ? Image.network(
-                                              _profile!['profileImage'],
+                                              photo,
                                               fit: BoxFit.cover,
                                               errorBuilder: (_, __, ___) =>
                                                   const Icon(
@@ -237,7 +272,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
-                                          'Good Morning, $firstName! 👋',
+                                          '$greeting, $firstName! 👋',
                                           overflow: TextOverflow.ellipsis,
                                           maxLines: 1,
                                           style: const TextStyle(
@@ -312,12 +347,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
           ),
           SliverToBoxAdapter(
             child: Padding(
@@ -326,7 +355,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildActiveTripBanner(),
-                  const SizedBox(height: 24),
                   _buildAdBanner(),
                   const SizedBox(height: 24),
                   const Text(
@@ -406,81 +434,87 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  /// Shown only while one of this parent's kids has a trip in progress
+  /// (it used to be a hardcoded "Van is on the way — 12 minutes" for
+  /// everyone). Live ETA is on the Track tab.
   Widget _buildActiveTripBanner() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF27AE60), Color(0xFF2ECC71)],
+    if (_activeTrips.isEmpty) return const SizedBox.shrink();
+    final trip = _activeTrips.first is Map ? _activeTrips.first as Map : const {};
+    final kids = (trip['kids'] is List ? trip['kids'] as List : const [])
+        .whereType<Map>()
+        .map((k) => (k['name'] ?? k['fullname'])?.toString() ?? '')
+        .where((n) => n.isNotEmpty)
+        .toList();
+    final driver = trip['driverFullname']?.toString();
+    final van = trip['carNumber']?.toString();
+    final who = kids.isEmpty ? 'Your child' : kids.join(', ');
+    final details = [
+      if (driver != null && driver.isNotEmpty) 'Driver $driver',
+      if (van != null && van.isNotEmpty) 'Van $van',
+    ].join(' · ');
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFF27AE60), Color(0xFF2ECC71)]),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF27AE60).withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF27AE60).withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child:
-                const Icon(Icons.directions_bus, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Van is on the way!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Estimated arrival in 12 minutes',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => setState(() => _currentIndex = 1),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF27AE60),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
               ),
-              minimumSize: Size.zero,
+              child: const Icon(Icons.directions_bus, color: Colors.white, size: 28),
             ),
-            child: const Text(
-              'Track',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _activeTrips.length > 1 ? '${_activeTrips.length} trips in progress' : 'Van is on the way!',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    details.isEmpty ? who : '$who · $details',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Poppins'),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            ElevatedButton(
+              onPressed: () => setState(() => _currentIndex = 1),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: const Color(0xFF27AE60),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('Track', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -744,12 +778,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     color: const Color(0xFF1B2B6B).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.child_care,
-                      color: Color(0xFF1B2B6B), size: 28),
+                  clipBehavior: Clip.antiAlias,
+                  child: (kid['image']?.toString().isNotEmpty ?? false)
+                      ? Image.network(
+                          kid['image'].toString(),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.child_care,
+                              color: Color(0xFF1B2B6B), size: 28),
+                        )
+                      : const Icon(Icons.child_care,
+                          color: Color(0xFF1B2B6B), size: 28),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  kid['name'] ?? 'Kid',
+                  (kid['fullname'] ?? kid['name'] ?? 'Kid').toString(),
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -761,23 +803,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 4),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF27AE60).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text(
-                    'Active',
-                    style: TextStyle(
-                      fontSize: 9,
-                      color: Color(0xFF27AE60),
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Poppins',
+                Builder(builder: (_) {
+                  // Real status from the school (was always "Active").
+                  final active = kid['status']?.toString() == 'active';
+                  final color = active ? const Color(0xFF27AE60) : const Color(0xFFFFB800);
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                  ),
-                ),
+                    child: Text(
+                      active ? 'Active' : 'Pending',
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  );
+                }),
               ],
             ),
           );
