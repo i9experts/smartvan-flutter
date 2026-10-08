@@ -113,7 +113,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF1B2B6B), Color(0xFF2D4099)],
+            colors: [Color(0xFF1B3B69), Color(0xFF2D4099)],
           ),
         ),
         child: SafeArea(
@@ -213,7 +213,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                             ),
                             prefixIcon: const Icon(
                               Icons.lock_outlined,
-                              color: Color(0xFF1B2B6B),
+                              color: Color(0xFF1B3B69),
                             ),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -240,7 +240,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
-                                  color: Color(0xFF1B2B6B), width: 2),
+                                  color: Color(0xFF1B3B69), width: 2),
                             ),
                           ),
                         ),
@@ -267,7 +267,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                             ),
                             prefixIcon: const Icon(
                               Icons.lock_outlined,
-                              color: Color(0xFF1B2B6B),
+                              color: Color(0xFF1B3B69),
                             ),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -294,7 +294,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
-                                  color: Color(0xFF1B2B6B), width: 2),
+                                  color: Color(0xFF1B3B69), width: 2),
                             ),
                           ),
                         ),
@@ -305,7 +305,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _resetPassword,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1B2B6B),
+                              backgroundColor: const Color(0xFF1B3B69),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),

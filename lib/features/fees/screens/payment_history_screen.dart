@@ -15,7 +15,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
   String _error = '';
   String _filterStatus = 'all';
 
-  static const Color _navy = Color(0xFF1B2B6B);
+  static const Color _navy = Color(0xFF1B3B69);
   static const Color _yellow = Color(0xFFFFB800);
 
   @override

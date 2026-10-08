@@ -94,7 +94,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF1B2B6B), Color(0xFF2D4099)],
+            colors: [Color(0xFF1B3B69), Color(0xFF2D4099)],
           ),
         ),
         child: SafeArea(
@@ -125,7 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     errorBuilder: (_, __, ___) => const Icon(
                       Icons.directions_bus,
                       size: 48,
-                      color: Color(0xFF1B2B6B),
+                      color: Color(0xFF1B3B69),
                     ),
                   ),
                 ),
@@ -206,7 +206,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: const Text(
                               'Forgot Password?',
                               style: TextStyle(
-                                color: Color(0xFF1B2B6B),
+                                color: Color(0xFF1B3B69),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 fontFamily: 'Poppins',
@@ -222,7 +222,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _login,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1B2B6B),
+                              backgroundColor: const Color(0xFF1B3B69),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
@@ -266,7 +266,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: const Text(
                                 'Sign Up',
                                 style: TextStyle(
-                                  color: Color(0xFF1B2B6B),
+                                  color: Color(0xFF1B3B69),
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Poppins',

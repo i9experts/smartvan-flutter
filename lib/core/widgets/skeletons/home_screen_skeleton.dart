@@ -15,7 +15,7 @@ class HomeScreenSkeleton extends StatelessWidget {
           expandedHeight: 90,
           floating: false,
           pinned: true,
-          backgroundColor: const Color(0xFF1B2B6B),
+          backgroundColor: const Color(0xFF1B3B69),
           automaticallyImplyLeading: false,
           flexibleSpace: FlexibleSpaceBar(
             background: Container(
@@ -23,7 +23,7 @@ class HomeScreenSkeleton extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF1B2B6B), Color(0xFF2D4099)],
+                  colors: [Color(0xFF1B3B69), Color(0xFF2D4099)],
                 ),
               ),
               child: SafeArea(

@@ -120,7 +120,7 @@ class _ChangePasswordScreenState
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFFB800),
-                  foregroundColor: const Color(0xFF1B2B6B),
+                  foregroundColor: const Color(0xFF1B3B69),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
@@ -159,7 +159,7 @@ class _ChangePasswordScreenState
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF1B2B6B), Color(0xFF2D4099)],
+                colors: [Color(0xFF1B3B69), Color(0xFF2D4099)],
               ),
             ),
             child: SafeArea(
@@ -197,20 +197,20 @@ class _ChangePasswordScreenState
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1B2B6B).withOpacity(0.08),
+                      color: const Color(0xFF1B3B69).withOpacity(0.08),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Row(
                       children: [
                         Icon(Icons.info_outline,
-                            color: Color(0xFF1B2B6B), size: 20),
+                            color: Color(0xFF1B3B69), size: 20),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             'Your new password must be different from the previously used password.',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Color(0xFF1B2B6B),
+                              color: Color(0xFF1B3B69),
                               fontFamily: 'Poppins',
                             ),
                           ),
@@ -247,7 +247,7 @@ class _ChangePasswordScreenState
                       onPressed: _isSaving ? null : _changePassword,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFFB800),
-                        foregroundColor: const Color(0xFF1B2B6B),
+                        foregroundColor: const Color(0xFF1B3B69),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
                         elevation: 0,
@@ -257,7 +257,7 @@ class _ChangePasswordScreenState
                               width: 24,
                               height: 24,
                               child: CircularProgressIndicator(
-                                color: Color(0xFF1B2B6B),
+                                color: Color(0xFF1B3B69),
                                 strokeWidth: 2,
                               ),
                             )
@@ -307,7 +307,7 @@ class _ChangePasswordScreenState
           obscureText: obscure,
           decoration: InputDecoration(
             prefixIcon: const Icon(Icons.lock_outlined,
-                color: Color(0xFF1B2B6B)),
+                color: Color(0xFF1B3B69)),
             suffixIcon: IconButton(
               icon: Icon(
                 obscure
@@ -330,7 +330,7 @@ class _ChangePasswordScreenState
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide:
-                  const BorderSide(color: Color(0xFF1B2B6B), width: 2),
+                  const BorderSide(color: Color(0xFF1B3B69), width: 2),
             ),
           ),
         ),

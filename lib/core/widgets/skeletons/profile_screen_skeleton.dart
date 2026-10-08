@@ -15,14 +15,14 @@ class ProfileScreenSkeleton extends StatelessWidget {
           floating: false,
           pinned: true,
           automaticallyImplyLeading: false,
-          backgroundColor: const Color(0xFF1B2B6B),
+          backgroundColor: const Color(0xFF1B3B69),
           flexibleSpace: FlexibleSpaceBar(
             background: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF1B2B6B), Color(0xFF2D4099)],
+                  colors: [Color(0xFF1B3B69), Color(0xFF2D4099)],
                 ),
               ),
               child: SafeArea(

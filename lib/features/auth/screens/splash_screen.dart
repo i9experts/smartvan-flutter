@@ -72,9 +72,9 @@ class _SplashScreenState extends State<SplashScreen>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF1B2B6B),
+              Color(0xFF1B3B69),
               Color(0xFF2D4099),
-              Color(0xFF1B2B6B),
+              Color(0xFF1B3B69),
             ],
           ),
         ),
@@ -142,7 +142,7 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                             SizedBox(height: 6),
                             Text(
-                              'Safe Ride, Every Side',
+                              'Track the Van. Stay Informed.',
                               style: TextStyle(
                                 color: Colors.white70,
                                 fontSize: 14,
