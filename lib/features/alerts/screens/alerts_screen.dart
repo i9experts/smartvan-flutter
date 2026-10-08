@@ -122,7 +122,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                   const SizedBox(height: 16),
                   TabBar(
                     controller: _tabController,
-                    indicatorColor: const Color(0xFFFFB800),
+                    indicatorColor: const Color(0xFFFEC610),
                     indicatorWeight: 3,
                     labelColor: Colors.white,
                     unselectedLabelColor: Colors.white54,
@@ -238,9 +238,9 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
         bgColor = const Color(0xFF8B5CF6).withOpacity(0.1);
         break;
       default:
-        alertColor = const Color(0xFFFFB800);
+        alertColor = const Color(0xFFFEC610);
         alertIcon = Icons.notifications_outlined;
-        bgColor = const Color(0xFFFFB800).withOpacity(0.1);
+        bgColor = const Color(0xFFFEC610).withOpacity(0.1);
     }
 
     return Container(

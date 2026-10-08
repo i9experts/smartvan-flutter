@@ -80,7 +80,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFB800),
+                          color: const Color(0xFFFEC610),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Row(
@@ -338,7 +338,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   decoration: BoxDecoration(
                     color: isActive
                         ? const Color(0xFF27AE60).withOpacity(0.1)
-                        : const Color(0xFFFFB800).withOpacity(0.1),
+                        : const Color(0xFFFEC610).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -348,7 +348,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                       fontWeight: FontWeight.w600,
                       color: isActive
                           ? const Color(0xFF27AE60)
-                          : const Color(0xFFFFB800),
+                          : const Color(0xFFFEC610),
                       fontFamily: 'Poppins',
                     ),
                   ),
@@ -427,7 +427,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                 _buildActionButton(
                   icon: Icons.edit_outlined,
                   label: 'Edit',
-                  color: const Color(0xFFFFB800),
+                  color: const Color(0xFFFEC610),
                   onTap: () => _showEditKid(kid),
                 ),
                 _buildActionButton(

@@ -318,7 +318,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                          color: const Color(0xFFFFB800), width: 3),
+                                          color: const Color(0xFFFEC610), width: 3),
                                     ),
                                     child: ClipOval(
                                       child: _selectedImage != null
@@ -341,7 +341,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                         width: 28,
                                         height: 28,
                                         decoration: const BoxDecoration(
-                                            color: Color(0xFFFFB800),
+                                            color: Color(0xFFFEC610),
                                             shape: BoxShape.circle),
                                         child: const Icon(Icons.camera_alt,
                                             size: 16, color: Colors.white),
@@ -483,7 +483,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Icons.child_care, const Color(0xFF1B3B69)),
         const SizedBox(width: 12),
         _buildStatCard('Trips', _tripsCount?.toString() ?? '—',
-            Icons.directions_bus, const Color(0xFFFFB800)),
+            Icons.directions_bus, const Color(0xFFFEC610)),
         const SizedBox(width: 12),
         _buildStatCard('Alerts', _alertsCount?.toString() ?? '—',
             Icons.notifications, const Color(0xFFFF4B4B)),
@@ -698,7 +698,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _buildSettingsItem(
             icon: Icons.help_outline,
             label: 'Help & Support',
-            color: const Color(0xFFFFB800),
+            color: const Color(0xFFFEC610),
             hasArrow: true,
             onTap: () => _launchUrl('https://app.smartvan.pk/support'),
           ),

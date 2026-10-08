@@ -229,7 +229,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Text(
                   slide['title']!,
                   style: const TextStyle(
-                    color: Color(0xFFFFB800),
+                    color: Color(0xFFFEC610),
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Poppins',
@@ -270,7 +270,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       height: 8,
                       decoration: BoxDecoration(
                         color: _currentPage == index
-                            ? const Color(0xFFFFB800)
+                            ? const Color(0xFFFEC610)
                             : Colors.white30,
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -286,7 +286,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: ElevatedButton(
                     onPressed: () => context.go('/login'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFB800),
+                      backgroundColor: const Color(0xFFFEC610),
                       foregroundColor: const Color(0xFF1B3B69),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -337,7 +337,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final colors = [
       const Color(0xFF1B3B69),
       const Color(0xFF27AE60),
-      const Color(0xFFFFB800),
+      const Color(0xFFFEC610),
       const Color(0xFF1B3B69),
     ];
     final index = _slides.indexWhere((s) => s['image'] == imagePath);

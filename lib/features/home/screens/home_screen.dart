@@ -242,7 +242,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: const Color(0xFFFFB800),
+                                        color: const Color(0xFFFEC610),
                                         width: 2,
                                       ),
                                       color: Colors.white.withOpacity(0.2),
@@ -321,7 +321,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             width: 8,
                                             height: 8,
                                             decoration: const BoxDecoration(
-                                              color: Color(0xFFFFB800),
+                                              color: Color(0xFFFEC610),
                                               shape: BoxShape.circle,
                                             ),
                                           ),
@@ -607,7 +607,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       {
         'icon': Icons.child_care_outlined,
         'label': 'My Kids',
-        'color': const Color(0xFFFFB800),
+        'color': const Color(0xFFFEC610),
         'index': 2,
       },
       {
@@ -865,11 +865,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFB800).withOpacity(0.1),
+                  color: const Color(0xFFFEC610).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.notifications_outlined,
-                    color: Color(0xFFFFB800), size: 20),
+                    color: Color(0xFFFEC610), size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(

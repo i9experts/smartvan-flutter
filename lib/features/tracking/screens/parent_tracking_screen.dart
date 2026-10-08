@@ -668,7 +668,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 icon: Icons.speed,
                 label: 'Speed',
                 value: '${_vanSpeed.toStringAsFixed(0)} km/h',
-                color: const Color(0xFFFFB800),
+                color: const Color(0xFFFEC610),
               ),
               _buildStatDivider(),
               _buildStat(
