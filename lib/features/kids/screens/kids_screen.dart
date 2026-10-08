@@ -385,27 +385,65 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   },
                 ),
                 _buildActionButton(
+                  icon: Icons.badge_outlined,
+                  label: 'Card',
+                  color: const Color(0xFF2563AE),
+                  onTap: () {
+                    final kidId = (kid['_id'] ?? kid['id'])?.toString();
+                    if (kidId == null) return;
+                    context.push(Uri(
+                      path: '/kid-card/$kidId',
+                      queryParameters: {'name': kid['fullname']?.toString() ?? ''},
+                    ).toString());
+                  },
+                ),
+                _buildActionButton(
                   icon: Icons.history,
                   label: 'History',
                   color: const Color(0xFF8A94A6),
                   onTap: () => _showTripHistory(kid),
                 ),
                 _buildActionButton(
-                  icon: Icons.edit_outlined,
-                  label: 'Edit',
-                  color: const Color(0xFFFFB800),
-                  onTap: () => _showEditKid(kid),
-                ),
-                _buildActionButton(
-                  icon: Icons.delete_outline,
-                  label: 'Remove',
-                  color: const Color(0xFFFF4B4B),
-                  onTap: () => _confirmDelete(kid),
+                  icon: Icons.more_horiz,
+                  label: 'More',
+                  color: const Color(0xFF667085),
+                  onTap: () => _showMoreActions(kid),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Edit / Remove live behind "More" to keep the action row readable.
+  void _showMoreActions(Map<String, dynamic> kid) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit_outlined, color: Color(0xFFFFB800)),
+              title: const Text('Edit', style: TextStyle(fontFamily: 'Poppins')),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _showEditKid(kid);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Color(0xFFFF4B4B)),
+              title: const Text('Remove', style: TextStyle(fontFamily: 'Poppins', color: Color(0xFFFF4B4B))),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _confirmDelete(kid);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

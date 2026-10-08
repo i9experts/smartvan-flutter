@@ -15,6 +15,7 @@ import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/change_password_screen.dart';
 import '../../features/fees/screens/payment_history_screen.dart';
 import '../../features/chat/chat_api.dart';
+import '../../features/kids/card/student_card_screen.dart';
 import '../../features/chat/screens/chat_screen.dart';
 import '../../features/chat/screens/conversations_screen.dart';
 
@@ -92,6 +93,13 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/payment-history',
       builder: (context, state) => const PaymentHistoryScreen(),
+    ),
+    GoRoute(
+      path: '/kid-card/:kidId',
+      builder: (context, state) => StudentCardScreen(
+        kidId: state.pathParameters['kidId']!,
+        kidName: state.uri.queryParameters['name'] ?? '',
+      ),
     ),
     GoRoute(
       path: '/chats',
