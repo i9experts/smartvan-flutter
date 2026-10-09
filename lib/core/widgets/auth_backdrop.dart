@@ -9,7 +9,7 @@ class AuthBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final photoHeight = MediaQuery.sizeOf(context).height * 0.5;
+    final photoHeight = MediaQuery.sizeOf(context).height * 0.56;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -22,7 +22,7 @@ class AuthBackdrop extends StatelessWidget {
           child: Image.asset(
             'assets/images/login_bg.jpg',
             fit: BoxFit.cover,
-            alignment: const Alignment(0, 0.55),
+            alignment: Alignment.bottomCenter,
             errorBuilder: (_, __, ___) => const SizedBox.shrink(),
           ),
         ),
@@ -36,7 +36,8 @@ class AuthBackdrop extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0x330B1B3F), Color(0xFF0B1B3F)],
+                colors: [Color(0x660B1B3F), Color(0x000B1B3F), Color(0x000B1B3F), Color(0xFF0B1B3F)],
+                stops: [0, 0.3, 0.9, 1],
               ),
             ),
           ),

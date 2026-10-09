@@ -143,7 +143,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   fontFamily: 'Poppins',
                 ),
               ),
-              const SizedBox(height: 28),
+              // Leaves room for the van in the backdrop photo.
+              SizedBox(height: MediaQuery.sizeOf(context).height * 0.23),
               // Bottom card
               Expanded(
                 child: Container(
