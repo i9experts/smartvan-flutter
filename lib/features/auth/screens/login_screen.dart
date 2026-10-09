@@ -89,17 +89,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final compact = screenHeight < 700;
+    // Hide the header while the keyboard is up so the form and Login stay visible.
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     return Scaffold(
       body: AuthBackdrop(
         child: SafeArea(
           bottom: false,
           child: Column(
             children: [
+              if (!keyboardOpen) ...[
               const SizedBox(height: 24),
               // Logo
               Container(
-                width: 100,
-                height: 100,
+                width: compact ? 72 : 100,
+                height: compact ? 72 : 100,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
@@ -146,7 +151,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               // Leaves room for the van in the backdrop photo.
-              SizedBox(height: MediaQuery.sizeOf(context).height * 0.23),
+              SizedBox(height: screenHeight * (compact ? 0.1 : 0.23)),
+              ] else
+                const SizedBox(height: 16),
               // Bottom card
               Expanded(
                 child: Container(
