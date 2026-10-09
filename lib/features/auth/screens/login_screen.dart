@@ -132,6 +132,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   fontFamily: 'Poppins',
+                  shadows: [Shadow(color: Color(0x99000000), blurRadius: 10)],
                 ),
               ),
               const SizedBox(height: 6),
@@ -139,8 +140,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'Sign in to track your child\'s journey',
                 style: TextStyle(
                   fontSize: 13,
-                  color: Colors.white70,
+                  color: Colors.white,
                   fontFamily: 'Poppins',
+                  shadows: [Shadow(color: Color(0x99000000), blurRadius: 10)],
                 ),
               ),
               // Leaves room for the van in the backdrop photo.
