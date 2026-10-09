@@ -52,7 +52,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF1B2B6B), Color(0xFF2D4099)],
+                colors: [Color(0xFF1B3B69), Color(0xFF2D4099)],
               ),
             ),
             child: SafeArea(
@@ -77,7 +77,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFB800),
+                          color: const Color(0xFFFEC610),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Row(
@@ -109,7 +109,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                     ? _buildEmptyState()
                     : RefreshIndicator(
                         onRefresh: _loadKids,
-                        color: const Color(0xFF1B2B6B),
+                        color: const Color(0xFF1B3B69),
                         child: ListView.builder(
                           padding: const EdgeInsets.all(20),
                           itemCount: _kids.length,
@@ -135,11 +135,11 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: const Color(0xFF1B2B6B).withOpacity(0.1),
+                color: const Color(0xFF1B3B69).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.child_care,
-                  size: 50, color: Color(0xFF1B2B6B)),
+                  size: 50, color: Color(0xFF1B3B69)),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -169,7 +169,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   style: TextStyle(
                       fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1B2B6B),
+                backgroundColor: const Color(0xFF1B3B69),
                 foregroundColor: Colors.white,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -221,7 +221,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFF1B2B6B).withOpacity(0.2),
+                      color: const Color(0xFF1B3B69).withOpacity(0.2),
                       width: 2,
                     ),
                   ),
@@ -287,7 +287,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   decoration: BoxDecoration(
                     color: isActive
                         ? const Color(0xFF27AE60).withOpacity(0.1)
-                        : const Color(0xFFFFB800).withOpacity(0.1),
+                        : const Color(0xFFFEC610).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -297,7 +297,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                       fontWeight: FontWeight.w600,
                       color: isActive
                           ? const Color(0xFF27AE60)
-                          : const Color(0xFFFFB800),
+                          : const Color(0xFFFEC610),
                       fontFamily: 'Poppins',
                     ),
                   ),
@@ -318,7 +318,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   child: Row(
                     children: [
                       const Icon(Icons.directions_bus,
-                          size: 16, color: Color(0xFF1B2B6B)),
+                          size: 16, color: Color(0xFF1B3B69)),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text('Van: $vanNumber',
@@ -337,7 +337,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   child: Row(
                     children: [
                       const Icon(Icons.person_outlined,
-                          size: 16, color: Color(0xFF1B2B6B)),
+                          size: 16, color: Color(0xFF1B3B69)),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text('Driver: $driverName',
@@ -364,7 +364,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                 _buildActionButton(
                   icon: Icons.map_outlined,
                   label: 'Track',
-                  color: const Color(0xFF1B2B6B),
+                  color: const Color(0xFF1B3B69),
                   onTap: () => context.go('/tracking'),
                 ),
                 _buildActionButton(
@@ -427,7 +427,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit_outlined, color: Color(0xFFFFB800)),
+              leading: const Icon(Icons.edit_outlined, color: Color(0xFFFEC610)),
               title: const Text('Edit', style: TextStyle(fontFamily: 'Poppins')),
               onTap: () {
                 Navigator.pop(sheetContext);
@@ -469,14 +469,14 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
 
   Widget _buildAvatarFallback(String name) {
     return Container(
-      color: const Color(0xFF1B2B6B).withOpacity(0.1),
+      color: const Color(0xFF1B3B69).withOpacity(0.1),
       child: Center(
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : 'K',
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1B2B6B),
+            color: Color(0xFF1B3B69),
             fontFamily: 'Poppins',
           ),
         ),
@@ -721,7 +721,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                             shape: BoxShape.circle,
                             color: const Color(0xFFF5F6FA),
                             border: Border.all(
-                                color: const Color(0xFF1B2B6B), width: 2),
+                                color: const Color(0xFF1B3B69), width: 2),
                           ),
                           child: ClipOval(
                             child: selectedImage != null
@@ -731,7 +731,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                                     ? Image.network(existingImageUrl,
                                         fit: BoxFit.cover)
                                     : const Icon(Icons.add_a_photo_outlined,
-                                        color: Color(0xFF1B2B6B), size: 28),
+                                        color: Color(0xFF1B3B69), size: 28),
                           ),
                         ),
                       ),
@@ -770,7 +770,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                                             fontFamily: 'Poppins',
                                             fontSize: 13)),
                                     icon: const Icon(Icons.keyboard_arrow_down,
-                                        color: Color(0xFF1B2B6B)),
+                                        color: Color(0xFF1B3B69)),
                                     items: kGradeLevels
                                         .map<DropdownMenuItem<String>>(
                                             (grade) => DropdownMenuItem(
@@ -821,7 +821,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 color: selectedGender == 'male'
-                                    ? const Color(0xFF1B2B6B)
+                                    ? const Color(0xFF1B3B69)
                                     : const Color(0xFFF5F6FA),
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -847,7 +847,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 color: selectedGender == 'female'
-                                    ? const Color(0xFF1B2B6B)
+                                    ? const Color(0xFF1B3B69)
                                     : const Color(0xFFF5F6FA),
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -881,7 +881,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: homeLat != null
-                                ? const Color(0xFF1B2B6B)
+                                ? const Color(0xFF1B3B69)
                                 : const Color(0xFFEAECF0),
                             width: homeLat != null ? 2 : 1,
                           ),
@@ -892,7 +892,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                               homeLat != null
                                   ? Icons.location_on
                                   : Icons.location_on_outlined,
-                              color: const Color(0xFF1B2B6B),
+                              color: const Color(0xFF1B3B69),
                               size: 18,
                             ),
                             const SizedBox(width: 10),
@@ -913,7 +913,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                             Text(
                               homeLat != null ? 'Change' : 'Set',
                               style: const TextStyle(
-                                color: Color(0xFF1B2B6B),
+                                color: Color(0xFF1B3B69),
                                 fontWeight: FontWeight.w600,
                                 fontSize: 12,
                                 fontFamily: 'Poppins',
@@ -931,7 +931,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                       child: ElevatedButton(
                         onPressed: isSaving ? null : saveChanges,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1B2B6B),
+                          backgroundColor: const Color(0xFF1B3B69),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
@@ -993,7 +993,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1B2B6B), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF1B3B69), width: 2),
         ),
       ),
     );

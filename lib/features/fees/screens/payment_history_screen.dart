@@ -20,8 +20,8 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
   /// Online methods enabled on the server (empty → pay driver/school).
   List<PayMethod> _payMethods = const [];
 
-  static const Color _navy = Color(0xFF1B2B6B);
-  static const Color _yellow = Color(0xFFFFB800);
+  static const Color _navy = Color(0xFF1B3B69);
+  static const Color _yellow = Color(0xFFFEC610);
 
   @override
   void initState() {
@@ -99,7 +99,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
   Color _statusColor(String status) {
     switch (status) {
       case 'paid': return const Color(0xFF27AE60);
-      case 'pending': return const Color(0xFFFFB800);
+      case 'pending': return const Color(0xFFFEC610);
       case 'overdue': return const Color(0xFFE74C3C);
       default: return const Color(0xFF8A94A6);
     }
@@ -108,7 +108,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
   Color _statusBgColor(String status) {
     switch (status) {
       case 'paid': return const Color(0xFF27AE60).withOpacity(0.08);
-      case 'pending': return const Color(0xFFFFB800).withOpacity(0.08);
+      case 'pending': return const Color(0xFFFEC610).withOpacity(0.08);
       case 'overdue': return const Color(0xFFE74C3C).withOpacity(0.08);
       default: return const Color(0xFF8A94A6).withOpacity(0.08);
     }

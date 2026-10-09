@@ -79,7 +79,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF1B2B6B), Color(0xFF2D4099)],
+                colors: [Color(0xFF1B3B69), Color(0xFF2D4099)],
               ),
             ),
             child: SafeArea(
@@ -122,7 +122,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                   const SizedBox(height: 16),
                   TabBar(
                     controller: _tabController,
-                    indicatorColor: const Color(0xFFFFB800),
+                    indicatorColor: const Color(0xFFFEC610),
                     indicatorWeight: 3,
                     labelColor: Colors.white,
                     unselectedLabelColor: Colors.white54,
@@ -159,7 +159,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
   Widget _buildAlertsList(List<dynamic> alerts) {
     return RefreshIndicator(
       onRefresh: _loadAlerts,
-      color: const Color(0xFF1B2B6B),
+      color: const Color(0xFF1B3B69),
       child: alerts.isEmpty
           ? ListView(
               children: [
@@ -172,10 +172,10 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1B2B6B).withOpacity(0.1),
+                          color: const Color(0xFF1B3B69).withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.notifications_off_outlined, size: 40, color: Color(0xFF1B2B6B)),
+                        child: const Icon(Icons.notifications_off_outlined, size: 40, color: Color(0xFF1B3B69)),
                       ),
                       const SizedBox(height: 16),
                       const Text('No Alerts',
@@ -223,9 +223,9 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
         break;
       case 'drop':
       case 'delay notice':
-        alertColor = const Color(0xFF1B2B6B);
+        alertColor = const Color(0xFF1B3B69);
         alertIcon = Icons.home_outlined;
-        bgColor = const Color(0xFF1B2B6B).withOpacity(0.1);
+        bgColor = const Color(0xFF1B3B69).withOpacity(0.1);
         break;
       case 'safety alert':
         alertColor = const Color(0xFFFF4B4B);
@@ -238,9 +238,9 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
         bgColor = const Color(0xFF8B5CF6).withOpacity(0.1);
         break;
       default:
-        alertColor = const Color(0xFFFFB800);
+        alertColor = const Color(0xFFFEC610);
         alertIcon = Icons.notifications_outlined;
-        bgColor = const Color(0xFFFFB800).withOpacity(0.1);
+        bgColor = const Color(0xFFFEC610).withOpacity(0.1);
     }
 
     return Container(

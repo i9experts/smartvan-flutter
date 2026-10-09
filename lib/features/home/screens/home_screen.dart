@@ -205,7 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadData,
-      color: const Color(0xFF1B2B6B),
+      color: const Color(0xFF1B3B69),
       child: CustomScrollView(
         slivers: [
           // Pinned header: the greeting row lives in the toolbar itself, so it
@@ -216,7 +216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             toolbarHeight: 76,
             titleSpacing: 20,
             automaticallyImplyLeading: false,
-            backgroundColor: const Color(0xFF1B2B6B),
+            backgroundColor: const Color(0xFF1B3B69),
             surfaceTintColor: Colors.transparent,
             scrolledUnderElevation: 2,
             flexibleSpace: Container(
@@ -224,7 +224,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF1B2B6B), Color(0xFF2D4099)],
+                  colors: [Color(0xFF1B3B69), Color(0xFF2D4099)],
                 ),
               ),
             ),
@@ -240,7 +240,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: const Color(0xFFFFB800),
+                                        color: const Color(0xFFFEC610),
                                         width: 2,
                                       ),
                                       color: Colors.white.withOpacity(0.2),
@@ -330,7 +330,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             width: 8,
                                             height: 8,
                                             decoration: const BoxDecoration(
-                                              color: Color(0xFFFFB800),
+                                              color: Color(0xFFFEC610),
                                               shape: BoxShape.circle,
                                             ),
                                           ),
@@ -386,7 +386,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: const Text(
                           'View All',
                           style: TextStyle(
-                            color: Color(0xFF1B2B6B),
+                            color: Color(0xFF1B3B69),
                             fontSize: 13,
                             fontFamily: 'Poppins',
                           ),
@@ -414,7 +414,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: const Text(
                           'View All',
                           style: TextStyle(
-                            color: Color(0xFF1B2B6B),
+                            color: Color(0xFF1B3B69),
                             fontSize: 13,
                             fontFamily: 'Poppins',
                           ),
@@ -548,7 +548,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
-                color: const Color(0xFF1B2B6B),
+                color: const Color(0xFF1B3B69),
               ),
               clipBehavior: Clip.antiAlias,
               child: Stack(
@@ -559,7 +559,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) =>
-                          Container(color: const Color(0xFF1B2B6B)),
+                          Container(color: const Color(0xFF1B3B69)),
                     ),
                   Positioned(
                     left: 0,
@@ -604,13 +604,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       {
         'icon': Icons.map_outlined,
         'label': 'Live Track',
-        'color': const Color(0xFF1B2B6B),
+        'color': const Color(0xFF1B3B69),
         'index': 1,
       },
       {
         'icon': Icons.child_care_outlined,
         'label': 'My Kids',
-        'color': const Color(0xFFFFB800),
+        'color': const Color(0xFFFEC610),
         'index': 2,
       },
       {
@@ -703,7 +703,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 style: TextStyle(fontFamily: 'Poppins'),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1B2B6B),
+                backgroundColor: const Color(0xFF1B3B69),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -730,19 +730,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF1B2B6B)),
+                  border: Border.all(color: const Color(0xFF1B3B69)),
                 ),
                 child: const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.add_circle_outline,
-                        color: Color(0xFF1B2B6B), size: 28),
+                        color: Color(0xFF1B3B69), size: 28),
                     SizedBox(height: 8),
                     Text(
                       'Add Kid',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Color(0xFF1B2B6B),
+                        color: Color(0xFF1B3B69),
                         fontWeight: FontWeight.w600,
                         fontFamily: 'Poppins',
                       ),
@@ -775,7 +775,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1B2B6B).withOpacity(0.1),
+                    color: const Color(0xFF1B3B69).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   clipBehavior: Clip.antiAlias,
@@ -784,10 +784,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           kid['image'].toString(),
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const Icon(Icons.child_care,
-                              color: Color(0xFF1B2B6B), size: 28),
+                              color: Color(0xFF1B3B69), size: 28),
                         )
                       : const Icon(Icons.child_care,
-                          color: Color(0xFF1B2B6B), size: 28),
+                          color: Color(0xFF1B3B69), size: 28),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -806,7 +806,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Builder(builder: (_) {
                   // Real status from the school (was always "Active").
                   final active = kid['status']?.toString() == 'active';
-                  final color = active ? const Color(0xFF27AE60) : const Color(0xFFFFB800);
+                  final color = active ? const Color(0xFF27AE60) : const Color(0xFFFEC610);
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
@@ -880,11 +880,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFB800).withOpacity(0.1),
+                  color: const Color(0xFFFEC610).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.notifications_outlined,
-                    color: Color(0xFFFFB800), size: 20),
+                    color: Color(0xFFFEC610), size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -940,7 +940,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onTap: (index) => setState(() => _currentIndex = index),
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF1B2B6B),
+        selectedItemColor: const Color(0xFF1B3B69),
         unselectedItemColor: const Color(0xFF8A94A6),
         selectedLabelStyle: const TextStyle(
           fontSize: 11,

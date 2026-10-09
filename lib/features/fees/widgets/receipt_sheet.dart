@@ -105,7 +105,7 @@ class _ReceiptSheetState extends State<ReceiptSheet> {
                       Text('${r['currency'] ?? 'PKR'} ${r['amount']}',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                              fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1B2B6B), fontFamily: 'Poppins')),
+                              fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1B3B69), fontFamily: 'Poppins')),
                       const SizedBox(height: 12),
                       _row('Receipt #', r['receiptNumber']),
                       _row('Student', r['studentName']),

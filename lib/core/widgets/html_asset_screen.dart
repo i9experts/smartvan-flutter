@@ -52,7 +52,7 @@ class _HtmlAssetScreenState extends State<HtmlAssetScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(widget.title),
-        backgroundColor: const Color(0xFF1B2B6B),
+        backgroundColor: const Color(0xFF1B3B69),
         foregroundColor: Colors.white,
       ),
       body: Stack(

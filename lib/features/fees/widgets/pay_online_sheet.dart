@@ -33,7 +33,7 @@ class PayOnlineSheet extends StatefulWidget {
 }
 
 class _PayOnlineSheetState extends State<PayOnlineSheet> {
-  static const _navy = Color(0xFF1B2B6B);
+  static const _navy = Color(0xFF1B3B69);
   static const _green = Color(0xFF27AE60);
 
   Checkout? _checkout;
@@ -180,7 +180,7 @@ class _PayOnlineSheetState extends State<PayOnlineSheet> {
           padding: const EdgeInsets.all(10),
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFB800).withOpacity(0.15),
+            color: const Color(0xFFFEC610).withOpacity(0.15),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Text('TEST MODE — no real money will be charged.',

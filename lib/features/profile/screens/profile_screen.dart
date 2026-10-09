@@ -265,7 +265,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   floating: false,
                   pinned: true,
                   automaticallyImplyLeading: false,
-                  backgroundColor: const Color(0xFF1B2B6B),
+                  backgroundColor: const Color(0xFF1B3B69),
                   surfaceTintColor: Colors.transparent,
                   // When the big header collapses, show a title instead of
                   // an empty blue bar.
@@ -303,7 +303,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Color(0xFF1B2B6B), Color(0xFF2D4099)],
+                          colors: [Color(0xFF1B3B69), Color(0xFF2D4099)],
                         ),
                       ),
                       child: SafeArea(
@@ -321,7 +321,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                          color: const Color(0xFFFFB800), width: 3),
+                                          color: const Color(0xFFFEC610), width: 3),
                                     ),
                                     child: ClipOval(
                                       child: _selectedImage != null
@@ -344,7 +344,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                         width: 28,
                                         height: 28,
                                         decoration: const BoxDecoration(
-                                            color: Color(0xFFFFB800),
+                                            color: Color(0xFFFEC610),
                                             shape: BoxShape.circle),
                                         child: const Icon(Icons.camera_alt,
                                             size: 16, color: Colors.white),
@@ -412,7 +412,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             child: ElevatedButton(
                               onPressed: _isSaving ? null : _saveProfile,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1B2B6B),
+                                backgroundColor: const Color(0xFF1B3B69),
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12)),
@@ -479,7 +479,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ? _nameController.text
         : (_profile?['name'] ?? 'P');
     return Container(
-      color: const Color(0xFF1B2B6B).withOpacity(0.3),
+      color: const Color(0xFF1B3B69).withOpacity(0.3),
       child: Center(
         child: Text(
           name[0].toUpperCase(),
@@ -497,10 +497,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Row(
       children: [
         _buildStatCard('Kids', _profile?['kidsCount']?.toString() ?? '0',
-            Icons.child_care, const Color(0xFF1B2B6B)),
+            Icons.child_care, const Color(0xFF1B3B69)),
         const SizedBox(width: 12),
         _buildStatCard('Trips', _profile?['tripsCount']?.toString() ?? '0',
-            Icons.directions_bus, const Color(0xFFFFB800)),
+            Icons.directions_bus, const Color(0xFFFEC610)),
         const SizedBox(width: 12),
         _buildStatCard('Alerts', _profile?['alertsCount']?.toString() ?? '0',
             Icons.notifications, const Color(0xFFFF4B4B)),
@@ -598,7 +598,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF1B2B6B), size: 20),
+          Icon(icon, color: const Color(0xFF1B3B69), size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -624,7 +624,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Color(0xFF1B2B6B))),
+                              borderSide: BorderSide(color: Color(0xFF1B3B69))),
                         ),
                       )
                     : Text(
@@ -663,7 +663,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _buildSettingsItem(
             icon: Icons.notifications_outlined,
             label: 'Push Notifications',
-            color: const Color(0xFF1B2B6B),
+            color: const Color(0xFF1B3B69),
             hasSwitch: true,
             value: _notificationsEnabled,
             onSwitch: (val) => setState(() => _notificationsEnabled = val),
@@ -682,7 +682,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _buildSettingsItem(
             icon: Icons.receipt_long_outlined,
             label: 'Payment History',
-            color: const Color(0xFF1B2B6B),
+            color: const Color(0xFF1B3B69),
             hasArrow: true,
             onTap: () => Navigator.push(
               context,
@@ -694,7 +694,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _buildSettingsItem(
             icon: Icons.lock_outlined,
             label: 'Change Password',
-            color: const Color(0xFF1B2B6B),
+            color: const Color(0xFF1B3B69),
             hasArrow: true,
             onTap: () => context.go('/change-password'),
           ),
@@ -716,7 +716,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _buildSettingsItem(
             icon: Icons.help_outline,
             label: 'Help & Support',
-            color: const Color(0xFFFFB800),
+            color: const Color(0xFFFEC610),
             hasArrow: true,
             onTap: () => Navigator.push(
               context,
@@ -774,7 +774,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Switch(
                   value: value,
                   onChanged: onSwitch,
-                  activeColor: const Color(0xFF1B2B6B)),
+                  activeColor: const Color(0xFF1B3B69)),
             if (hasArrow)
               const Icon(Icons.arrow_forward_ios,
                   size: 14, color: Color(0xFF8A94A6)),

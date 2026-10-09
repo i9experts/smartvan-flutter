@@ -13,7 +13,7 @@ class StudentCardStyle {
 
   /// Printed at the bottom of every card.
   static const url = 'app.smartvan.pk';
-  static const tagline = 'Safe Ride, Every Side';
+  static const tagline = 'Track the Van. Stay Informed.';
   static const returnNote = 'If found, please return to the school';
 
   /// ID-1 card size in millimetres.

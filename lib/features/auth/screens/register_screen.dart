@@ -229,7 +229,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               value: _agreedToTerms,
                               onChanged: (val) =>
                                   setState(() => _agreedToTerms = val ?? false),
-                              activeColor: const Color(0xFF1B2B6B),
+                              activeColor: const Color(0xFF1B3B69),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(4),
                               ),
@@ -249,7 +249,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                       TextSpan(
                                         text: 'Terms & Conditions',
                                         style: TextStyle(
-                                          color: Color(0xFF1B2B6B),
+                                          color: Color(0xFF1B3B69),
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -257,7 +257,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                       TextSpan(
                                         text: 'Privacy Policy',
                                         style: TextStyle(
-                                          color: Color(0xFF1B2B6B),
+                                          color: Color(0xFF1B3B69),
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -277,7 +277,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _register,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1B2B6B),
+                              backgroundColor: const Color(0xFF1B3B69),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -321,7 +321,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               child: const Text(
                                 'Sign In',
                                 style: TextStyle(
-                                  color: Color(0xFF1B2B6B),
+                                  color: Color(0xFF1B3B69),
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Poppins',
@@ -371,7 +371,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           fontSize: 14,
           fontFamily: 'Poppins',
         ),
-        prefixIcon: Icon(icon, color: const Color(0xFF1B2B6B)),
+        prefixIcon: Icon(icon, color: const Color(0xFF1B3B69)),
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
@@ -384,7 +384,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1B2B6B), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF1B3B69), width: 2),
         ),
       ),
     );
@@ -407,7 +407,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           fontFamily: 'Poppins',
         ),
         prefixIcon:
-            const Icon(Icons.lock_outlined, color: Color(0xFF1B2B6B)),
+            const Icon(Icons.lock_outlined, color: Color(0xFF1B3B69)),
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -427,7 +427,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1B2B6B), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF1B3B69), width: 2),
         ),
       ),
     );

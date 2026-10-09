@@ -16,7 +16,7 @@ class StudentCardScreen extends StatefulWidget {
 }
 
 class _StudentCardScreenState extends State<StudentCardScreen> {
-  static const _navy = Color(0xFF1B2B6B);
+  static const _navy = Color(0xFF1B3B69);
   late Future<StudentCardData> _future = StudentCardApi.load(widget.kidId);
   bool _busy = false;
 

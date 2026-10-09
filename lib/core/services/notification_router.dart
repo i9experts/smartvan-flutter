@@ -44,7 +44,7 @@ class NotificationRouter {
     messenger.showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: urgent ? const Color(0xFFE53935) : const Color(0xFF1B2B6B),
+        backgroundColor: urgent ? const Color(0xFFE53935) : const Color(0xFF1B3B69),
         duration: Duration(seconds: urgent ? 12 : 5),
         content: Column(
           mainAxisSize: MainAxisSize.min,

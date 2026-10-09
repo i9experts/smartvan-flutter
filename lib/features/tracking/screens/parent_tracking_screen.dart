@@ -389,7 +389,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         Polyline(
           polylineId: const PolylineId('route'),
           points: [_vanPosition, _homePosition],
-          color: const Color(0xFF1B2B6B),
+          color: const Color(0xFF1B3B69),
           width: 4,
           patterns: [
             PatternItem.dash(20),
@@ -422,7 +422,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         Polyline(
           polylineId: const PolylineId('route'),
           points: [_vanPosition, _homePosition],
-          color: const Color(0xFF1B2B6B),
+          color: const Color(0xFF1B3B69),
           width: 4,
           patterns: [
             PatternItem.dash(20),
@@ -481,7 +481,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF1B2B6B), Color(0xFF2D4099)],
+                colors: [Color(0xFF1B3B69), Color(0xFF2D4099)],
               ),
             ),
             child: SafeArea(
@@ -612,13 +612,13 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
               width: 90,
               height: 90,
               decoration: BoxDecoration(
-                color: const Color(0xFF1B2B6B).withOpacity(0.08),
+                color: const Color(0xFF1B3B69).withOpacity(0.08),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.directions_bus_filled_outlined,
                 size: 42,
-                color: Color(0xFF1B2B6B),
+                color: Color(0xFF1B3B69),
               ),
             ),
             const SizedBox(height: 20),
@@ -667,7 +667,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             ),
           ],
         ),
-        child: Icon(icon, color: const Color(0xFF1B2B6B), size: 20),
+        child: Icon(icon, color: const Color(0xFF1B3B69), size: 20),
       ),
     );
   }
@@ -696,11 +696,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1B2B6B).withOpacity(0.1),
+                  color: const Color(0xFF1B3B69).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.directions_bus,
-                    color: Color(0xFF1B2B6B), size: 26),
+                    color: Color(0xFF1B3B69), size: 26),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -757,14 +757,14 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 icon: Icons.access_time,
                 label: 'ETA',
                 value: _eta,
-                color: const Color(0xFF1B2B6B),
+                color: const Color(0xFF1B3B69),
               ),
               _buildStatDivider(),
               _buildStat(
                 icon: Icons.speed,
                 label: 'Speed',
                 value: '${_vanSpeed.toStringAsFixed(0)} km/h',
-                color: const Color(0xFFFFB800),
+                color: const Color(0xFFFEC610),
               ),
               _buildStatDivider(),
               _buildStat(

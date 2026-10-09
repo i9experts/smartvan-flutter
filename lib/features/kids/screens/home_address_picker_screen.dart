@@ -140,7 +140,7 @@ class _HomeAddressPickerScreenState extends State<HomeAddressPickerScreen> {
                   shape: const CircleBorder(),
                   elevation: 3,
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Color(0xFF1B2B6B)),
+                    icon: const Icon(Icons.arrow_back, color: Color(0xFF1B3B69)),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
@@ -159,7 +159,7 @@ class _HomeAddressPickerScreenState extends State<HomeAddressPickerScreen> {
                   shape: const CircleBorder(),
                   elevation: 3,
                   child: IconButton(
-                    icon: const Icon(Icons.my_location, color: Color(0xFF1B2B6B)),
+                    icon: const Icon(Icons.my_location, color: Color(0xFF1B3B69)),
                     onPressed: _goToCurrentLocation,
                   ),
                 ),
@@ -232,7 +232,7 @@ class _HomeAddressPickerScreenState extends State<HomeAddressPickerScreen> {
                               );
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B2B6B),
+                        backgroundColor: const Color(0xFF1B3B69),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

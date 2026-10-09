@@ -235,15 +235,15 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                             activeFillColor: Colors.white,
                             inactiveFillColor: Colors.white,
                             selectedFillColor: Colors.white,
-                            activeColor: const Color(0xFF1B2B6B),
+                            activeColor: const Color(0xFF1B3B69),
                             inactiveColor: const Color(0xFFEAECF0),
-                            selectedColor: const Color(0xFF1B2B6B),
+                            selectedColor: const Color(0xFF1B3B69),
                           ),
                           enableActiveFill: true,
                           textStyle: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1B2B6B),
+                            color: Color(0xFF1B3B69),
                             fontFamily: 'Poppins',
                           ),
                         ),
@@ -254,7 +254,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _verifyOtp,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1B2B6B),
+                              backgroundColor: const Color(0xFF1B3B69),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -299,7 +299,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                                       height: 16,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: Color(0xFF1B2B6B),
+                                        color: Color(0xFF1B3B69),
                                       ),
                                     )
                                   : Text(
@@ -309,7 +309,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                                       style: TextStyle(
                                         color: _resendSeconds > 0
                                             ? const Color(0xFF8A94A6)
-                                            : const Color(0xFF1B2B6B),
+                                            : const Color(0xFF1B3B69),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                         fontFamily: 'Poppins',
@@ -322,14 +322,14 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1B2B6B).withOpacity(0.08),
+                            color: const Color(0xFF1B3B69).withOpacity(0.08),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Row(
                             children: [
                               Icon(
                                 Icons.info_outline,
-                                color: Color(0xFF1B2B6B),
+                                color: Color(0xFF1B3B69),
                                 size: 20,
                               ),
                               SizedBox(width: 12),
@@ -337,7 +337,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                                 child: Text(
                                   'The OTP is valid for 10 minutes. Please do not share it with anyone.',
                                   style: TextStyle(
-                                    color: Color(0xFF1B2B6B),
+                                    color: Color(0xFF1B3B69),
                                     fontSize: 12,
                                     fontFamily: 'Poppins',
                                   ),

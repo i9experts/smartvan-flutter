@@ -174,7 +174,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             ),
                             prefixIcon: const Icon(
                               Icons.email_outlined,
-                              color: Color(0xFF1B2B6B),
+                              color: Color(0xFF1B3B69),
                             ),
                             filled: true,
                             fillColor: Colors.white,
@@ -191,7 +191,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
-                                  color: Color(0xFF1B2B6B), width: 2),
+                                  color: Color(0xFF1B3B69), width: 2),
                             ),
                           ),
                         ),
@@ -203,7 +203,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _sendOtp,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1B2B6B),
+                              backgroundColor: const Color(0xFF1B3B69),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -233,14 +233,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1B2B6B).withOpacity(0.08),
+                            color: const Color(0xFF1B3B69).withOpacity(0.08),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             children: [
                               const Icon(
                                 Icons.info_outline,
-                                color: Color(0xFF1B2B6B),
+                                color: Color(0xFF1B3B69),
                                 size: 20,
                               ),
                               const SizedBox(width: 12),
@@ -248,7 +248,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                 child: Text(
                                   'We will send a 6-digit OTP to your registered email address. Please check your inbox.',
                                   style: TextStyle(
-                                    color: Color(0xFF1B2B6B),
+                                    color: Color(0xFF1B3B69),
                                     fontSize: 12,
                                     fontFamily: 'Poppins',
                                   ),
@@ -275,7 +275,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                               child: const Text(
                                 'Sign In',
                                 style: TextStyle(
-                                  color: Color(0xFF1B2B6B),
+                                  color: Color(0xFF1B3B69),
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Poppins',

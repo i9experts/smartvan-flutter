@@ -24,7 +24,7 @@ class AbsenceSheet extends StatefulWidget {
 }
 
 class _AbsenceSheetState extends State<AbsenceSheet> {
-  static const _navy = Color(0xFF1B2B6B);
+  static const _navy = Color(0xFF1B3B69);
 
   DateTime _date = DateTime.now();
   String _tripType = 'both';
