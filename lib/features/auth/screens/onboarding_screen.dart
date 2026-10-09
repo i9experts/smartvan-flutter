@@ -327,26 +327,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildSlideImage(String imagePath) {
-    // Use placeholder icons since we don't have the actual photos
-    final icons = [
-      Icons.directions_bus_filled,
-      Icons.child_care,
-      Icons.location_on,
-      Icons.person,
-    ];
-    final colors = [
-      const Color(0xFF1B2B6B),
-      const Color(0xFF27AE60),
-      const Color(0xFFFFB800),
-      const Color(0xFF1B2B6B),
-    ];
     final index = _slides.indexWhere((s) => s['image'] == imagePath);
-    return Center(
-      child: Icon(
-        icons[index >= 0 ? index : 0],
-        size: 120,
-        color: colors[index >= 0 ? index : 0].withOpacity(0.3),
-      ),
+    // Same photo on every slide, panned differently so the pages feel distinct.
+    const alignments = [
+      Alignment(0, 0.3),
+      Alignment(-0.8, 0.6),
+      Alignment(0.9, -0.2),
+      Alignment(0.2, 0.9),
+    ];
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/images/login_bg.jpg',
+          fit: BoxFit.cover,
+          alignment: alignments[index >= 0 ? index : 0],
+          errorBuilder: (_, __, ___) => const ColoredBox(color: Color(0xFFE8F0FF)),
+        ),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0x000B1B3F), Color(0x660B1B3F)],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
