@@ -163,7 +163,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 16),
+                        SizedBox(height: keyboardOpen ? 0 : 16),
                         // Email field
                         _buildInputLabel('Email Address'),
                         const SizedBox(height: 8),
@@ -194,7 +194,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 () => _obscurePassword = !_obscurePassword),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: keyboardOpen ? 0 : 12),
                         // Forgot password
                         Align(
                           alignment: Alignment.centerRight,
@@ -211,7 +211,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: keyboardOpen ? 4 : 24),
                         // Login button
                         SizedBox(
                           width: double.infinity,
