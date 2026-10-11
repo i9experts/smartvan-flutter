@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../network/api_service.dart';
+import '../router/app_router.dart';
 
 class FCMService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -26,6 +27,21 @@ class FCMService {
         debugPrint('FCM: ${message.notification!.title}');
       }
     });
+
+    // Tapped a notification while the app was backgrounded.
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+
+    // App was cold-started by tapping a notification.
+    final initialMessage = await _messaging.getInitialMessage();
+    if (initialMessage != null) {
+      _handleNotificationTap(initialMessage);
+    }
+  }
+
+  static void _handleNotificationTap(RemoteMessage message) {
+    if (message.data['actionType'] == 'RATE_TRIP') {
+      appRouter.push('/rate-trip', extra: {'tripId': message.data['tripId']});
+    }
   }
 
   static Future<void> _saveFCMToken(String token) async {

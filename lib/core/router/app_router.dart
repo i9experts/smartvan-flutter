@@ -15,6 +15,7 @@ import '../../features/alerts/screens/alerts_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/change_password_screen.dart';
 import '../../features/fees/screens/payment_history_screen.dart';
+import '../../features/rating/screens/rate_trip_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -91,6 +92,17 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/change-password',
       builder: (context, state) => const ChangePasswordScreen(),
+    ),
+    GoRoute(
+      path: '/rate-trip',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        final items = (extra?['pendingRatings'] as List<dynamic>?) ?? [];
+        return RateTripScreen(
+          pendingRatings: items.cast<Map<String, dynamic>>(),
+          tripId: extra?['tripId'] as String?,
+        );
+      },
     ),
   ],
 );
