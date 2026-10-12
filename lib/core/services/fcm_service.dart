@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,12 +17,12 @@ class FCMService {
       sound: true,
     );
 
-    final token = await _messaging.getToken();
-    if (token != null) {
-      await _saveFCMToken(token);
-    }
-
     _messaging.onTokenRefresh.listen(_saveFCMToken);
+
+    // Not awaited: on iOS this can take a few seconds while APNs registers.
+    getToken().then((token) {
+      if (token != null) _saveFCMToken(token);
+    });
 
     // App open: show an in-app banner (safety alerts in red).
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -58,6 +60,18 @@ class FCMService {
   }
 
   static Future<String?> getToken() async {
+    if (Platform.isIOS) {
+      // On iOS the FCM token is only issued once the APNs token exists.
+      String? apns = await _messaging.getAPNSToken();
+      for (var i = 0; apns == null && i < 10; i++) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        apns = await _messaging.getAPNSToken();
+      }
+      if (apns == null) {
+        debugPrint('FCM: APNs token not available (simulator or push not set up)');
+        return null;
+      }
+    }
     return await _messaging.getToken();
   }
 }
