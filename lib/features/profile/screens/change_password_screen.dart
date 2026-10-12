@@ -47,14 +47,22 @@ class _ChangePasswordScreenState
 
     setState(() => _isSaving = true);
     try {
-      await ApiService.post('/auth/change-password', {
+      final response = await ApiService.post('/auth/change-password', {
         'oldPassword': _currentController.text,
         'newPassword': _newController.text,
         'userType': 'parent',
       });
 
-      if (mounted) {
-        _showSuccessDialog();
+      // ApiService treats any 4xx as a normal (non-throwing) response, so a
+      // wrong current password (401) would otherwise fall straight through
+      // to the success dialog below without this check.
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (mounted) _showSuccessDialog();
+      } else {
+        final message = response.data is Map
+            ? (response.data['message'] ?? 'Failed to change password. Try again.')
+            : 'Failed to change password. Try again.';
+        if (mounted) _showError(message.toString());
       }
     } catch (e) {
       if (mounted) _showError('Failed to change password. Try again.');

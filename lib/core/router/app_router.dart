@@ -18,6 +18,7 @@ import '../../features/chat/chat_api.dart';
 import '../../features/kids/card/student_card_screen.dart';
 import '../../features/chat/screens/chat_screen.dart';
 import '../../features/chat/screens/conversations_screen.dart';
+import '../../features/rating/screens/rate_trip_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -45,6 +46,10 @@ final GoRouter appRouter = GoRouter(
         return OtpScreen(
           phone: extra['phone'],
           isRegistration: extra['isRegistration'] ?? true,
+          // Every caller already sends this (e.g. RegisterScreen sends the
+          // user's chosen role) — it just wasn't being read here, so OTP
+          // verification always fell back to 'parent' regardless.
+          userType: extra['userType'] ?? 'parent',
         );
       },
     ),
@@ -59,6 +64,7 @@ final GoRouter appRouter = GoRouter(
         return ResetPasswordScreen(
           email: extra['email'] as String,
           otp: extra['otp'] as String,
+          userType: extra['userType'] ?? 'parent',
         );
       },
     ),
@@ -109,6 +115,17 @@ final GoRouter appRouter = GoRouter(
       path: '/chat',
       builder: (context, state) =>
           ChatScreen(conversation: state.extra as Conversation),
+    ),
+    GoRoute(
+      path: '/rate-trip',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        final items = (extra?['pendingRatings'] as List<dynamic>?) ?? [];
+        return RateTripScreen(
+          pendingRatings: items.cast<Map<String, dynamic>>(),
+          tripId: extra?['tripId'] as String?,
+        );
+      },
     ),
   ],
 );

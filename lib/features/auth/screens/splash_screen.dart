@@ -56,8 +56,10 @@ class _SplashScreenState extends State<SplashScreen>
         context.go('/home');
         // Opened by tapping a notification while the app was closed.
         final pending = NotificationRouter.pendingRoute;
+        final pendingExtra = NotificationRouter.pendingExtra;
         NotificationRouter.pendingRoute = null;
-        if (pending != null) context.push(pending);
+        NotificationRouter.pendingExtra = null;
+        if (pending != null) context.push(pending, extra: pendingExtra);
       } else {
         context.go('/onboarding');
       }

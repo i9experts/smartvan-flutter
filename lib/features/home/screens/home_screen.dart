@@ -27,6 +27,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// Today's trips that are in progress for this parent's kids.
   List<dynamic> _activeTrips = [];
   bool _isLoading = true;
+  double _avgRating = 0;
+  int _ratingCount = 0;
+  List<Map<String, dynamic>> _pendingRatings = [];
 
   @override
   void initState() {
@@ -53,8 +56,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _loadAlerts(),
       _loadBanners(),
       _loadActiveTrips(),
+      _loadRatingSummary(),
+      _loadPendingRatings(),
     ]);
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadRatingSummary() async {
+    try {
+      final response = await ApiService.get('/rating/myRatingSummary');
+      if (response.statusCode == 200) {
+        final raw = response.data;
+        final data = (raw is Map ? (raw['data'] ?? raw) : {}) as Map;
+        setState(() {
+          _avgRating = (data['avgRating'] as num?)?.toDouble() ?? 0;
+          _ratingCount = (data['ratingCount'] as num?)?.toInt() ?? 0;
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to load rating summary: $e');
+    }
+  }
+
+  Future<void> _loadPendingRatings() async {
+    try {
+      final response = await ApiService.get('/rating/pendingRatings');
+      if (response.statusCode == 200) {
+        final raw = response.data;
+        final all = ((raw is Map ? raw['data'] : null) ?? raw ?? []) as List;
+        setState(() => _pendingRatings = all.cast<Map<String, dynamic>>());
+      }
+    } catch (e) {
+      debugPrint('Failed to load pending ratings: $e');
+    }
   }
 
   Future<void> _loadBanners() async {
@@ -88,7 +122,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // Response is { message, data: [kids] } — reading data['kids'] always
         // gave an empty list, so Home said "No kids added yet".
         final raw = response.data;
-        final list = raw is List ? raw : (raw is Map ? (raw['data'] ?? raw['kids']) : null);
+        final list = raw is List
+            ? raw
+            : (raw is Map ? (raw['data'] is Map ? raw['data']['kids'] : (raw['data'] ?? raw['kids'])) : null);
         setState(() => _kids = list is List ? list : []);
       }
     } catch (_) {
@@ -117,7 +153,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // Response is { message, data: { notifications: [...] } } (newest
         // first); data['alerts'] never existed, so Recent Alerts was empty.
         final raw = response.data;
-        final inner = raw is Map ? raw['data'] : raw;
+        final inner = raw is Map ? (raw['data'] ?? raw) : raw;
         final list = inner is List
             ? inner
             : (inner is Map ? (inner['notifications'] ?? inner['alerts']) : null);
@@ -153,7 +189,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF4B4B),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
             ),
             child: const Text(
               'Logout',
@@ -355,7 +392,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildActiveTripBanner(),
+                  if (_pendingRatings.isNotEmpty) ...[
+                    _buildRateDriverBanner(),
+                    const SizedBox(height: 24),
+                  ],
                   _buildAdBanner(),
+                  const SizedBox(height: 24),
+                  _buildRatingStatCard(),
                   const SizedBox(height: 24),
                   const Text(
                     'Quick Actions',
@@ -515,6 +558,116 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildRateDriverBanner() {
+    final first = _pendingRatings.first;
+    final driverName = first['driverName'] ?? 'your driver';
+    final extraCount = _pendingRatings.length - 1;
+
+    return GestureDetector(
+      onTap: () => context.push('/rate-trip', extra: {'pendingRatings': _pendingRatings}),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFB800), Color(0xFFFFA000)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFFB800).withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.25),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.star_rate_rounded, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Rate your trip with $driverName',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    extraCount > 0 ? 'Tap to rate · $extraCount more waiting' : 'Tap to rate',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.white, size: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRatingStatCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.star, color: Color(0xFFFFB800), size: 28),
+          const SizedBox(width: 12),
+          Text(
+            _ratingCount > 0 ? _avgRating.toStringAsFixed(1) : '—',
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1B2B6B),
+              fontFamily: 'Poppins',
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _ratingCount > 0
+                  ? 'Your rating · $_ratingCount review${_ratingCount == 1 ? '' : 's'}'
+                  : 'No ratings yet',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF8A94A6),
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

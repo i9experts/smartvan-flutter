@@ -42,6 +42,7 @@ class FCMService {
     final initial = await _messaging.getInitialMessage();
     if (initial != null) {
       NotificationRouter.pendingRoute = NotificationRouter.routeFor(initial.data);
+      NotificationRouter.pendingExtra = NotificationRouter.extraFor(initial.data);
     }
   }
 

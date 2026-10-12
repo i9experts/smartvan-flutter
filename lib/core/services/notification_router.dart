@@ -11,12 +11,14 @@ class NotificationRouter {
   /// Route opened from a notification tapped while the app was closed;
   /// consumed by the splash screen after it decides where to go.
   static String? pendingRoute;
+  static Object? pendingExtra;
 
   /// Safety alerts that must stand out even in the foreground.
   static const _urgentTypes = {'driver_sos', 'drop_not_confirmed', 'NO_SHOW'};
 
   static String? routeFor(Map<String, dynamic> data) {
     final type = data['type']?.toString() ?? '';
+    if (_isRateTrip(data)) return '/rate-trip';
     if (type == 'CHAT_MESSAGE') return '/chats';
     if (type == 'PAYMENT_RECEIVED') return '/payment-history';
     if (type == 'driver_sos' || type == 'ETA_UPDATE' || type == 'VAN_AT_STOP' || type.startsWith('GEOFENCE_')) {
@@ -26,9 +28,17 @@ class NotificationRouter {
     return null;
   }
 
+  /// Backend sends the marker as either `type` or `actionType`.
+  static bool _isRateTrip(Map<String, dynamic> data) =>
+      data['type'] == 'RATE_TRIP' || data['actionType'] == 'RATE_TRIP';
+
+  /// Extra passed to the route (rating screen narrows to the notified trip).
+  static Object? extraFor(Map<String, dynamic> data) =>
+      _isRateTrip(data) ? {'tripId': data['tripId']?.toString()} : null;
+
   static void open(Map<String, dynamic> data) {
     final route = routeFor(data);
-    if (route != null) appRouter.push(route);
+    if (route != null) appRouter.push(route, extra: extraFor(data));
   }
 
   /// In-app banner for a push received while the app is open.
@@ -60,7 +70,7 @@ class NotificationRouter {
             : SnackBarAction(
                 label: 'View',
                 textColor: Colors.white,
-                onPressed: () => appRouter.push(route),
+                onPressed: () => appRouter.push(route, extra: extraFor(data)),
               ),
       ),
     );
