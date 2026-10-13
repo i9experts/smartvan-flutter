@@ -551,6 +551,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: const Color(0xFF27AE60),
+                minimumSize: const Size(0, 36),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
