@@ -632,15 +632,19 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: _joinedTrip
-                                ? const Color(0xFF27AE60)
-                                : const Color(0xFFFF4B4B),
+                            color: _noActiveTrip
+                                ? const Color(0xFF8A94A6)
+                                : _joinedTrip
+                                    ? const Color(0xFF27AE60)
+                                    : const Color(0xFFFF4B4B),
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          _joinedTrip
+                          _noActiveTrip
+                              ? 'No active trip'
+                              : _joinedTrip
                               ? 'Live'
                               : (_connectionError != null
                                   ? 'Connection failed'
