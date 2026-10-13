@@ -85,13 +85,20 @@ class VanIconPainter extends CustomPainter {
 /// Draws the van at [devicePixelRatio] times its logical size, so it stays
 /// sharp on every screen, and wraps it as a map marker icon of
 /// [vanIconLogicalSize] logical pixels.
-Future<BitmapDescriptor> createVanIcon(
-    {required double devicePixelRatio}) async {
+Future<BitmapDescriptor> createVanIcon({required double devicePixelRatio}) =>
+    _paintVan(devicePixelRatio, const VanIconPainter());
+
+/// The same van in grey, for a van whose position is old (driver offline).
+Future<BitmapDescriptor> createStaleVanIcon(
+        {required double devicePixelRatio}) =>
+    _paintVan(devicePixelRatio, const VanIconPainter(body: Color(0xFF8A94A6)));
+
+Future<BitmapDescriptor> _paintVan(
+    double devicePixelRatio, VanIconPainter painter) async {
   final pixels = (vanIconLogicalSize * devicePixelRatio).round();
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder);
-  const VanIconPainter()
-      .paint(canvas, Size(pixels.toDouble(), pixels.toDouble()));
+  painter.paint(canvas, Size(pixels.toDouble(), pixels.toDouble()));
   final image = await recorder.endRecording().toImage(pixels, pixels);
   final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
   image.dispose();

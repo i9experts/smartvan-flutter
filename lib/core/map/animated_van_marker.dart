@@ -27,6 +27,8 @@ class AnimatedVanMarker extends StatefulWidget {
     this.title,
     this.markerId = const MarkerId('van'),
     this.iconFactory = createVanIcon,
+    this.staleIconFactory = createStaleVanIcon,
+    this.stale = false,
     this.duration = const Duration(seconds: 1),
   });
 
@@ -43,6 +45,11 @@ class AnimatedVanMarker extends StatefulWidget {
   final String? title;
   final MarkerId markerId;
   final VanIconFactory iconFactory;
+  final VanIconFactory staleIconFactory;
+
+  /// The position is old (the driver is offline): the van is drawn grey and
+  /// faded.
+  final bool stale;
   final Duration duration;
 
   @override
@@ -57,6 +64,7 @@ class _AnimatedVanMarkerState extends State<AnimatedVanMarker>
   );
 
   BitmapDescriptor? _icon;
+  BitmapDescriptor? _staleIcon;
   double? _iconRatio;
 
   @override
@@ -107,7 +115,13 @@ class _AnimatedVanMarkerState extends State<AnimatedVanMarker>
   Future<void> _loadIcon(double ratio) async {
     try {
       final icon = await widget.iconFactory(devicePixelRatio: ratio);
-      if (mounted && _iconRatio == ratio) setState(() => _icon = icon);
+      final stale = await widget.staleIconFactory(devicePixelRatio: ratio);
+      if (mounted && _iconRatio == ratio) {
+        setState(() {
+          _icon = icon;
+          _staleIcon = stale;
+        });
+      }
     } catch (e) {
       debugPrint('[AnimatedVanMarker] van icon failed, using the pin: $e');
     }
@@ -128,7 +142,8 @@ class _AnimatedVanMarkerState extends State<AnimatedVanMarker>
                     flat: true,
                     anchor: const Offset(0.5, 0.5),
                     zIndex: 1,
-                    icon: _icon ??
+                    alpha: widget.stale ? 0.55 : 1.0,
+                    icon: (widget.stale ? _staleIcon ?? _icon : _icon) ??
                         BitmapDescriptor.defaultMarkerWithHue(
                             BitmapDescriptor.hueBlue),
                     infoWindow: InfoWindow(title: widget.title),
