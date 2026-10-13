@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/map/animated_van_marker.dart';
@@ -11,6 +11,7 @@ import '../../../core/map/polyline_codec.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/storage/token_storage.dart';
 import '../../../core/widgets/skeletons/tracking_screen_skeleton.dart';
+import '../socket_teardown.dart';
 import '../tracking_map_layers.dart';
 
 class TrackingScreen extends ConsumerStatefulWidget {
@@ -27,7 +28,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   final FollowCameraController _follow =
       FollowCameraController(following: false);
   static const _followZoom = 15.0;
-  IO.Socket? _socket;
+  io.Socket? _socket;
   LatLng _vanPosition = const LatLng(24.8607, 67.0011);
   LatLng _homePosition = const LatLng(24.8700, 67.0100);
   /// False while [_homePosition] is only the placeholder.
@@ -76,8 +77,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   void dispose() {
     _planTimer?.cancel();
     _follow.dispose();
-    _socket?.disconnect();
-    _socket?.dispose();
+    tearDownSocket(_socket);
+    _socket = null;
     _mapController?.dispose();
     super.dispose();
   }
@@ -181,10 +182,12 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 
   void _connectSocket() async {
     final token = await TokenStorage.read() ?? '';
+    // The screen was left while the token was being read.
+    if (!mounted) return;
 
-    _socket = IO.io(
+    _socket = io.io(
       AppConstants.socketUrl,
-      IO.OptionBuilder()
+      io.OptionBuilder()
           .setTransports(['websocket', 'polling'])
           .setAuth({'token': token})
           // connect() is called once below; auto-connect as well made the
@@ -198,9 +201,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 
     _socket!.onConnect((_) {
       debugPrint('Tracking socket connected, joining trip $_currentTripId');
-      if (mounted) setState(() {
-        _connectionError = null;
-      });
+      if (mounted) {
+        setState(() {
+          _connectionError = null;
+        });
+      }
       if (_currentTripId != null) {
         _socket!.emit('joinTrip', {'tripId': _currentTripId});
       }
@@ -208,10 +213,12 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 
     _socket!.on('joinedTrip', (data) {
       debugPrint('Tracking socket joinedTrip: $data');
-      if (mounted) setState(() {
-        _joinedTrip = true;
-        _connectionError = null;
-      });
+      if (mounted) {
+        setState(() {
+          _joinedTrip = true;
+          _connectionError = null;
+        });
+      }
     });
 
     // Server pushes per-kid ETA after each van update (computed at most
@@ -246,9 +253,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     });
 
     _socket!.onDisconnect((_) {
-      if (mounted) setState(() {
-        _joinedTrip = false;
-      });
+      if (mounted) {
+        setState(() {
+          _joinedTrip = false;
+        });
+      }
     });
 
     _socket!.onConnectError((data) {

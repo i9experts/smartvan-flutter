@@ -5,7 +5,8 @@ List<LatLng> decodePolyline(String encoded) {
   final points = <LatLng>[];
   var index = 0, lat = 0, lng = 0;
   int next() {
-    var result = 0, shift = 0, b;
+    var result = 0, shift = 0;
+    int b;
     do {
       b = encoded.codeUnitAt(index++) - 63;
       result |= (b & 0x1f) << shift;
