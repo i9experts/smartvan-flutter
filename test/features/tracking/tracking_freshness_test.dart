@@ -99,4 +99,22 @@ void main() {
       expect(gate.newest, ago(2));
     });
   });
+
+  group('status pill', () {
+    test('live: the server status', () {
+      expect(statusLabel(DriverSignal.live, 'moving'), 'Moving');
+      expect(statusLabel(DriverSignal.live, 'stopped'), 'Stopped');
+      expect(statusLabel(DriverSignal.live, 'delayed'), 'Delayed in traffic');
+      expect(statusLabel(DriverSignal.live, null), 'En Route');
+      expect(statusColorValue(DriverSignal.live, 'delayed'), 0xFFF39C12);
+      expect(statusColorValue(DriverSignal.live, 'moving'), 0xFF27AE60);
+    });
+
+    test('an old position wins over the server status', () {
+      expect(statusLabel(DriverSignal.weak, 'moving'), 'Weak signal');
+      expect(statusLabel(DriverSignal.offline, 'moving'), 'Driver offline');
+      expect(statusColorValue(DriverSignal.offline, 'moving'), 0xFFFF4B4B);
+      expect(statusColorValue(DriverSignal.weak, 'stopped'), 0xFFF39C12);
+    });
+  });
 }

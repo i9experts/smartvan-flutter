@@ -81,3 +81,44 @@ class LocationEventGate {
     if (newest == null || at.isAfter(newest)) _newest = at;
   }
 }
+
+/// What the status pill says: the signal wins over the server's trip status
+/// once the position is old.
+String statusLabel(DriverSignal signal, String? tripStatus) {
+  switch (signal) {
+    case DriverSignal.offline:
+      return 'Driver offline';
+    case DriverSignal.weak:
+      return 'Weak signal';
+    case DriverSignal.live:
+      switch (tripStatus) {
+        case 'moving':
+          return 'Moving';
+        case 'stopped':
+          return 'Stopped';
+        case 'delayed':
+          return 'Delayed in traffic';
+        default:
+          return 'En Route';
+      }
+  }
+}
+
+/// Colour of the status pill (ARGB).
+int statusColorValue(DriverSignal signal, String? tripStatus) {
+  switch (signal) {
+    case DriverSignal.offline:
+      return 0xFFFF4B4B;
+    case DriverSignal.weak:
+      return 0xFFF39C12;
+    case DriverSignal.live:
+      switch (tripStatus) {
+        case 'stopped':
+          return 0xFF8A94A6;
+        case 'delayed':
+          return 0xFFF39C12;
+        default:
+          return 0xFF27AE60;
+      }
+  }
+}

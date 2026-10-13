@@ -12,7 +12,9 @@ import '../../../core/network/api_service.dart';
 import '../../../core/storage/token_storage.dart';
 import '../../../core/widgets/skeletons/tracking_screen_skeleton.dart';
 import '../socket_teardown.dart';
+import '../tracking_freshness.dart';
 import '../tracking_map_layers.dart';
+import '../widgets/freshness_line.dart';
 
 class TrackingScreen extends ConsumerStatefulWidget {
   const TrackingScreen({super.key});
@@ -21,7 +23,8 @@ class TrackingScreen extends ConsumerStatefulWidget {
   ConsumerState<TrackingScreen> createState() => _TrackingScreenState();
 }
 
-class _TrackingScreenState extends ConsumerState<TrackingScreen> {
+class _TrackingScreenState extends ConsumerState<TrackingScreen>
+    with WidgetsBindingObserver {
   GoogleMapController? _mapController;
   /// Follows the van (zoom ~15) once the parent asks; starts off, because the
   /// map first shows the whole route.
@@ -67,20 +70,76 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   /// Null until the van's position is known; the animated marker draws it.
   LatLng? _vanFix;
 
+  /// Server time of the newest position applied (event `at`, or the last
+  /// stored point at load). Drives "Updated N sec ago" and the signal state.
+  DateTime? _lastUpdateAt;
+
+  /// Drops duplicate / older location events (socket and HTTP relay both
+  /// deliver now).
+  final LocationEventGate _gate = LocationEventGate();
+
+  /// Repaints the "Updated N sec ago" line and the live / weak / offline state
+  /// every second without rebuilding the map.
+  final ValueNotifier<DateTime> _clock = ValueNotifier(DateTime.now());
+  Timer? _clockTimer;
+  bool _stale = false;
+
+  /// The socket connected before: a later connect is a reconnect, and the
+  /// trail may have a gap.
+  bool _connectedBefore = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
     _initTracking();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _clockTimer?.cancel();
+    _clock.dispose();
     _planTimer?.cancel();
     _follow.dispose();
     tearDownSocket(_socket);
     _socket = null;
     _mapController?.dispose();
     super.dispose();
+  }
+
+  DriverSignal get _signal => driverSignal(
+        now: DateTime.now(),
+        lastAt: _lastUpdateAt,
+        tripStatus: _tripStatus,
+      );
+
+  void _tick() {
+    if (!mounted) return;
+    _clock.value = DateTime.now();
+    // The van icon greys out when the driver is offline.
+    final stale = _signal == DriverSignal.offline;
+    if (stale != _stale) setState(() => _stale = stale);
+  }
+
+  /// Back from the background: the socket may have been suspended, so what
+  /// happened meanwhile is fetched again.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || _currentTripId == null) return;
+    final socket = _socket;
+    if (socket != null && socket.connected != true) socket.connect();
+    _refreshAfterGap();
+  }
+
+  /// Position, trail, planned line and ETA again — after the app was away or
+  /// the socket reconnected, or the driver uploaded points recorded offline.
+  Future<void> _refreshAfterGap() async {
+    await _loadTripData();
+    if (!mounted || _noActiveTrip) return;
+    await Future.wait([_loadTrail(), _loadRoutePlan()]);
+    _fetchEta();
   }
 
   Future<void> _initTracking() async {
@@ -142,6 +201,13 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 (long as num).toDouble(),
               );
               _vanFix = _vanPosition;
+            }
+            final at = parseServerTime(lastLoc['time']);
+            if (at != null) {
+              _gate.seed(at);
+              if (_lastUpdateAt == null || at.isAfter(_lastUpdateAt!)) {
+                _lastUpdateAt = at;
+              }
             }
           }
         });
@@ -209,6 +275,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       if (_currentTripId != null) {
         _socket!.emit('joinTrip', {'tripId': _currentTripId});
       }
+      // A reconnect: events were missed while the socket was down.
+      if (_connectedBefore) _refreshAfterGap();
+      _connectedBefore = true;
     });
 
     _socket!.on('joinedTrip', (data) {
@@ -243,7 +312,21 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     // Emergency raised by the driver (Phase 2 driver SOS).
     _socket!.on('tripStatus', (data) {
       if (data is! Map || !mounted) return;
-      setState(() => _tripStatus = data['status']?.toString());
+      final seen = parseServerTime(data['lastSeenAt']);
+      setState(() {
+        _tripStatus = data['status']?.toString();
+        if (seen != null &&
+            (_lastUpdateAt == null || seen.isAfter(_lastUpdateAt!))) {
+          _lastUpdateAt = seen;
+        }
+      });
+    });
+
+    // The driver's phone uploaded points it recorded while offline.
+    _socket!.on('trailBackfilled', (data) {
+      if (!mounted) return;
+      _loadTrail();
+      _loadRoutePlan();
     });
 
     _socket!.on('sosAlert', (data) {
@@ -298,11 +381,17 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       final long = double.tryParse(location['long'].toString());
       if (lat == null || long == null) return;
 
+      // Socket and HTTP relay can both deliver a point, and a reconnect can
+      // replay old ones: apply only what is newer than what the map shows.
+      final at = parseServerTime(data['at']);
+      if (!_gate.accept(at)) return;
+
       final newPosition = LatLng(lat, long);
       final speedKmh = (data['speedKmh'] as num?)?.toDouble();
       final heading = (data['heading'] as num?)?.toDouble();
 
       setState(() {
+        _lastUpdateAt = at ?? DateTime.now();
         _vanPosition = newPosition;
         _vanFix = newPosition;
         _vanHeading = heading;
@@ -373,29 +462,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     );
   }
 
-  String get _statusLabel {
-    switch (_tripStatus) {
-      case 'moving':
-        return 'Moving';
-      case 'stopped':
-        return 'Stopped';
-      case 'delayed':
-        return 'Delayed in traffic';
-      default:
-        return 'En Route';
-    }
-  }
+  String get _statusLabel => statusLabel(_signal, _tripStatus);
 
-  Color get _statusColor {
-    switch (_tripStatus) {
-      case 'stopped':
-        return const Color(0xFF8A94A6);
-      case 'delayed':
-        return const Color(0xFFF39C12);
-      default:
-        return const Color(0xFF27AE60);
-    }
-  }
+  Color get _statusColor => Color(statusColorValue(_signal, _tripStatus));
 
   Widget _buildDelayBanner() {
     return Material(
@@ -672,6 +741,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                       AnimatedVanMarker(
                         position: _vanFix,
                         headingDegrees: _vanHeading,
+                        stale: _stale,
                         speedMetersPerSecond: _hasSpeed ? _vanSpeed / 3.6 : null,
                         title: 'SmartVan - $_vanNumber',
                         onPose: _follow.onPose,
@@ -694,7 +764,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                           },
                           tiltGesturesEnabled: false,
                           // Keeps the van and the camera centre above the info card.
-                          padding: const EdgeInsets.only(bottom: 270),
+                          padding: const EdgeInsets.only(bottom: 300),
                           markers: {..._markers, ...vanMarkers},
                           polylines: _polylines,
                           myLocationEnabled: true,
@@ -753,7 +823,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                       // Offered once the parent moved the map away from the van.
                       Positioned(
                         right: 16,
-                        bottom: 282,
+                        bottom: 312,
                         child: ListenableBuilder(
                           listenable: _follow,
                           builder: (context, _) => _follow.showRecenter
@@ -862,7 +932,14 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     );
   }
 
-  Widget _buildInfoCard() {
+  /// The card repaints every second ([_clock]) so "Updated N sec ago" and the
+  /// live / weak / offline state stay true without rebuilding the map.
+  Widget _buildInfoCard() => ValueListenableBuilder<DateTime>(
+        valueListenable: _clock,
+        builder: (context, now, _) => _infoCard(now),
+      );
+
+  Widget _infoCard(DateTime now) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -937,7 +1014,13 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
+          FreshnessLine(
+            now: now,
+            lastAt: _lastUpdateAt,
+            offline: _signal == DriverSignal.offline,
+          ),
+          const SizedBox(height: 12),
           const Divider(color: Color(0xFFEAECF0), height: 1),
           const SizedBox(height: 16),
           Row(
