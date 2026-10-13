@@ -174,9 +174,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     _socket = IO.io(
       AppConstants.socketUrl,
       IO.OptionBuilder()
-          .setTransports(['polling', 'websocket'])
+          .setTransports(['websocket', 'polling'])
           .setAuth({'token': token})
-          .enableAutoConnect()
+          // connect() is called once below; auto-connect as well made the
+          // socket open twice and time out.
+          .disableAutoConnect()
           .enableReconnection()
           .setReconnectionAttempts(5)
           .setReconnectionDelay(2000)
