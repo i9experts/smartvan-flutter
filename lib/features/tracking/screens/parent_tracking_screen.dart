@@ -41,7 +41,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   Map<String, dynamic>? _tripData;
   String? _currentTripId;
   String? _currentKidName;
-  String _vanStatus = 'En Route';
+  /// Latest socket 'tripStatus': moving | stopped | delayed (null until sent).
+  String? _tripStatus;
   String _eta = 'Calculating...';
   /// This parent's kids on the current trip (for per-kid ETA).
   Set<String> _myKidIds = {};
@@ -113,7 +114,6 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
           _currentTripId = trip['tripId']?.toString();
           _driverName = trip['driverFullname'] ?? 'Driver';
           _vanNumber = trip['carNumber'] ?? 'SV-001';
-          _vanStatus = trip['status'] ?? 'En Route';
           if (kids.isNotEmpty) {
             _currentKidName = Map<String, dynamic>.from(kids.first)['name'];
           }
@@ -223,6 +223,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     });
 
     // Emergency raised by the driver (Phase 2 driver SOS).
+    _socket!.on('tripStatus', (data) {
+      if (data is! Map || !mounted) return;
+      setState(() => _tripStatus = data['status']?.toString());
+    });
+
     _socket!.on('sosAlert', (data) {
       if (data is! Map || !mounted) return;
       if (data['source'] != 'driver') return;
@@ -342,6 +347,56 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 call('Call school', schoolPhone),
                 call('Call driver', driverPhone),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String get _statusLabel {
+    switch (_tripStatus) {
+      case 'moving':
+        return 'Moving';
+      case 'stopped':
+        return 'Stopped';
+      case 'delayed':
+        return 'Delayed in traffic';
+      default:
+        return 'En Route';
+    }
+  }
+
+  Color get _statusColor {
+    switch (_tripStatus) {
+      case 'stopped':
+        return const Color(0xFF8A94A6);
+      case 'delayed':
+        return const Color(0xFFF39C12);
+      default:
+        return const Color(0xFF27AE60);
+    }
+  }
+
+  Widget _buildDelayBanner() {
+    return Material(
+      color: const Color(0xFFFFF3E0),
+      borderRadius: BorderRadius.circular(12),
+      elevation: 2,
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            Icon(Icons.traffic_rounded, color: Color(0xFFE67E22), size: 18),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'The van is delayed in traffic. ETA may be later than usual.',
+                style: TextStyle(
+                    color: Color(0xFF8A4B08),
+                    fontSize: 12,
+                    fontFamily: 'Poppins'),
+              ),
             ),
           ],
         ),
@@ -644,6 +699,16 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                           child: _buildConnectionBanner(),
                         ),
 
+                      if (_tripStatus == 'delayed' &&
+                          _connectionError == null &&
+                          _driverSos == null)
+                        Positioned(
+                          top: 12,
+                          left: 12,
+                          right: 72,
+                          child: _buildDelayBanner(),
+                        ),
+
                       if (_driverSos != null)
                         Positioned(
                           top: 12,
@@ -817,15 +882,15 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF27AE60).withOpacity(0.1),
+                  color: _statusColor.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  _vanStatus,
-                  style: const TextStyle(
+                  _statusLabel,
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF27AE60),
+                    color: _statusColor,
                     fontFamily: 'Poppins',
                   ),
                 ),
@@ -854,7 +919,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
               _buildStatDivider(),
               _buildStat(
                 icon: Icons.route,
-                label: 'Status',
+                label: 'Connection',
                 value: _joinedTrip ? 'Live' : 'Offline',
                 color: _joinedTrip
                     ? const Color(0xFF27AE60)
