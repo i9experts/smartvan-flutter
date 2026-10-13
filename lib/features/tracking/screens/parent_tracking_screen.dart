@@ -6,10 +6,12 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/map/animated_van_marker.dart';
+import '../../../core/map/follow_camera.dart';
 import '../../../core/map/polyline_codec.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/storage/token_storage.dart';
 import '../../../core/widgets/skeletons/tracking_screen_skeleton.dart';
+import '../tracking_map_layers.dart';
 
 class TrackingScreen extends ConsumerStatefulWidget {
   const TrackingScreen({super.key});
@@ -20,9 +22,16 @@ class TrackingScreen extends ConsumerStatefulWidget {
 
 class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   GoogleMapController? _mapController;
+  /// Follows the van (zoom ~15) once the parent asks; starts off, because the
+  /// map first shows the whole route.
+  final FollowCameraController _follow =
+      FollowCameraController(following: false);
+  static const _followZoom = 15.0;
   IO.Socket? _socket;
   LatLng _vanPosition = const LatLng(24.8607, 67.0011);
   LatLng _homePosition = const LatLng(24.8700, 67.0100);
+  /// False while [_homePosition] is only the placeholder.
+  bool _homeKnown = false;
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
   /// Where the van has actually driven (GET /trail, then each locationUpdated).
@@ -66,6 +75,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   @override
   void dispose() {
     _planTimer?.cancel();
+    _follow.dispose();
     _socket?.disconnect();
     _socket?.dispose();
     _mapController?.dispose();
@@ -161,6 +171,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             (kidWithHome['homeLat'] as num).toDouble(),
             (kidWithHome['homeLng'] as num).toDouble(),
           );
+          _homeKnown = true;
         });
       }
     } catch (e) {
@@ -219,9 +230,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       final m = (mine.first['minutes'] as num?)?.toInt();
       final t = mine.first['etaTime']?.toString();
       if (m == null) return;
-      setState(() => _eta = m <= 1
-          ? 'Arriving now'
-          : '$m min${t != null && t != 'N/A' ? ' ($t)' : ''}');
+      setState(() => _eta = etaText(m, t));
     });
 
     // Emergency raised by the driver (Phase 2 driver SOS).
@@ -293,7 +302,6 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       });
       _trail.add(newPosition);
       _rebuildPolylines();
-      _animateCamera();
     });
 
     _socket!.connect();
@@ -537,68 +545,43 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   void _rebuildPolylines() {
     if (!mounted) return;
     setState(() {
-      _polylines = {
-        if (_plannedPath.length > 1)
-          Polyline(
-            polylineId: const PolylineId('planned'),
-            points: _plannedPath,
-            color: const Color(0xFF1B3B69),
-            width: 4,
-            patterns: [PatternItem.dash(20), PatternItem.gap(10)],
-          )
-        else
-          Polyline(
-            polylineId: const PolylineId('planned'),
-            points: [_vanPosition, _myStop ?? _homePosition],
-            color: const Color(0xFF1B3B69),
-            width: 4,
-            patterns: [PatternItem.dash(20), PatternItem.gap(10)],
-          ),
-        if (_trail.length > 1)
-          Polyline(
-            polylineId: const PolylineId('trail'),
-            points: List.of(_trail),
-            color: const Color(0xFF27AE60),
-            width: 5,
-          ),
-      };
+      _polylines = trackingPolylines(
+        plannedPath: _plannedPath,
+        trail: _trail,
+        van: _vanPosition,
+        stop: _myStop ?? _homePosition,
+      );
     });
   }
 
-  void _animateCamera() {
-    _mapController?.animateCamera(
-      CameraUpdate.newLatLng(_vanPosition),
-    );
-  }
+  /// Back to the van at zoom ~15 and follow it from here on.
+  void _centerOnVan() => _follow.recenter();
 
-  void _centerOnVan() {
-    _mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(target: _vanPosition, zoom: 15),
-      ),
-    );
-  }
-
-  void _fitBounds() {
-    final bounds = LatLngBounds(
-      southwest: LatLng(
-        _vanPosition.latitude < _homePosition.latitude
-            ? _vanPosition.latitude
-            : _homePosition.latitude,
-        _vanPosition.longitude < _homePosition.longitude
-            ? _vanPosition.longitude
-            : _homePosition.longitude,
-      ),
-      northeast: LatLng(
-        _vanPosition.latitude > _homePosition.latitude
-            ? _vanPosition.latitude
-            : _homePosition.latitude,
-        _vanPosition.longitude > _homePosition.longitude
-            ? _vanPosition.longitude
-            : _homePosition.longitude,
-      ),
-    );
-    _mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80));
+  /// The van, the child's stop, the school and the planned line, all in view
+  /// above the info card (the map's bottom padding keeps that space free).
+  /// Leaves follow mode — the parent is looking at the whole route.
+  void _fitAll() {
+    final map = _mapController;
+    if (map == null) return;
+    final points = <LatLng>[
+      _vanPosition,
+      if (_myStop != null) _myStop!,
+      if (_myStop == null && _homeKnown) _homePosition,
+      if (_schoolPoint != null) _schoolPoint!,
+      ..._plannedPath,
+    ];
+    _follow.pause();
+    final bounds = boundsOfPoints(points);
+    if (bounds == null ||
+        (bounds.southwest.latitude == bounds.northeast.latitude &&
+            bounds.southwest.longitude == bounds.northeast.longitude)) {
+      map.animateCamera(CameraUpdate.newCameraPosition(
+          CameraPosition(target: _vanPosition, zoom: _followZoom, tilt: 0)));
+      return;
+    }
+    map
+        .animateCamera(CameraUpdate.newLatLngBounds(bounds, 60))
+        .catchError((Object e) => debugPrint('Tracking fit failed: $e'));
   }
 
   @override
@@ -682,16 +665,25 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                         headingDegrees: _vanHeading,
                         speedMetersPerSecond: _hasSpeed ? _vanSpeed / 3.6 : null,
                         title: 'SmartVan - $_vanNumber',
-                        builder: (context, vanMarkers) => GoogleMap(
+                        onPose: _follow.onPose,
+                        builder: (context, vanMarkers) => Listener(
+                          // Touching the map means the parent is looking around.
+                          behavior: HitTestBehavior.translucent,
+                          onPointerDown: (_) => _follow.userMoved(),
+                          child: GoogleMap(
                           initialCameraPosition: CameraPosition(
                             target: _vanPosition,
                             zoom: 14,
+                            tilt: 0,
                           ),
                           onMapCreated: (controller) {
                             _mapController = controller;
+                            _follow.attachMap(controller,
+                                recenterZoom: _followZoom);
                             Future.delayed(
-                                const Duration(milliseconds: 500), _fitBounds);
+                                const Duration(milliseconds: 500), _fitAll);
                           },
+                          tiltGesturesEnabled: false,
                           // Keeps the van and the camera centre above the info card.
                           padding: const EdgeInsets.only(bottom: 270),
                           markers: {..._markers, ...vanMarkers},
@@ -700,6 +692,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                           myLocationButtonEnabled: false,
                           zoomControlsEnabled: false,
                           mapToolbarEnabled: false,
+                          ),
                         ),
                       ),
 
@@ -742,9 +735,35 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                             const SizedBox(height: 8),
                             _buildMapButton(
                               icon: Icons.fit_screen,
-                              onTap: _fitBounds,
+                              onTap: _fitAll,
                             ),
                           ],
+                        ),
+                      ),
+
+                      // Offered once the parent moved the map away from the van.
+                      Positioned(
+                        right: 16,
+                        bottom: 282,
+                        child: ListenableBuilder(
+                          listenable: _follow,
+                          builder: (context, _) => _follow.showRecenter
+                              ? FloatingActionButton.extended(
+                                  heroTag: null,
+                                  onPressed: _centerOnVan,
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: const Color(0xFF1B3B69),
+                                  icon: const Icon(Icons.my_location, size: 20),
+                                  label: const Text(
+                                    'Re-center',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Poppins',
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
                         ),
                       ),
 
