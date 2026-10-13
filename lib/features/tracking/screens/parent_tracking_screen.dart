@@ -180,7 +180,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
           // socket open twice and time out.
           .disableAutoConnect()
           .enableReconnection()
-          .setReconnectionAttempts(5)
+          .setReconnectionAttempts(double.infinity)
           .setReconnectionDelay(2000)
           .build(),
     );
@@ -692,6 +692,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                             Future.delayed(
                                 const Duration(milliseconds: 500), _fitBounds);
                           },
+                          // Keeps the van and the camera centre above the info card.
+                          padding: const EdgeInsets.only(bottom: 270),
                           markers: {..._markers, ...vanMarkers},
                           polylines: _polylines,
                           myLocationEnabled: true,
