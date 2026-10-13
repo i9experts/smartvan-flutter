@@ -6,6 +6,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/map/animated_van_marker.dart';
+import '../../../core/map/polyline_codec.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/storage/token_storage.dart';
 import '../../../core/widgets/skeletons/tracking_screen_skeleton.dart';
@@ -24,6 +25,14 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   LatLng _homePosition = const LatLng(24.8700, 67.0100);
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
+  /// Where the van has actually driven (GET /trail, then each locationUpdated).
+  final List<LatLng> _trail = [];
+  /// Road-following line from the van through the remaining stops.
+  List<LatLng> _plannedPath = [];
+  LatLng? _myStop;
+  LatLng? _schoolPoint;
+  String? _schoolName;
+  Timer? _planTimer;
   String? _connectionError;
   /// True once the server confirmed 'joinedTrip' (we are in the trip room).
   bool _joinedTrip = false;
@@ -55,6 +64,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 
   @override
   void dispose() {
+    _planTimer?.cancel();
     _socket?.disconnect();
     _socket?.dispose();
     _mapController?.dispose();
@@ -70,8 +80,12 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       _connectSocket();
       // One initial ETA; after that the server pushes 'etaUpdate'.
       _fetchEta();
+      await Future.wait([_loadTrail(), _loadRoutePlan()]);
+      _planTimer =
+          Timer.periodic(const Duration(seconds: 60), (_) => _loadRoutePlan());
     }
     _setupMarkers();
+    _rebuildPolylines();
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -270,7 +284,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         _hasSpeed = speedKmh != null;
         if (speedKmh != null) _vanSpeed = speedKmh;
       });
-      _updateRouteLine();
+      _trail.add(newPosition);
+      _rebuildPolylines();
       _animateCamera();
     });
 
@@ -392,47 +407,99 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       _markers = {
         Marker(
           markerId: const MarkerId('home'),
-          position: _homePosition,
+          position: _myStop ?? _homePosition,
           icon: BitmapDescriptor.defaultMarkerWithHue(
               BitmapDescriptor.hueGreen),
-          infoWindow: const InfoWindow(
-            title: 'Your Home',
-            snippet: 'Drop-off location',
+          infoWindow: InfoWindow(
+            title: _currentKidName != null
+                ? '$_currentKidName\'s stop'
+                : 'Your Home',
+            snippet: 'Pickup / drop-off point',
           ),
         ),
-      };
-
-      _polylines = {
-        Polyline(
-          polylineId: const PolylineId('route'),
-          points: [_vanPosition, _homePosition],
-          color: const Color(0xFF1B3B69),
-          width: 4,
-          patterns: [
-            PatternItem.dash(20),
-            PatternItem.gap(10),
-          ],
-        ),
+        if (_schoolPoint != null)
+          Marker(
+            markerId: const MarkerId('school'),
+            position: _schoolPoint!,
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueOrange),
+            infoWindow: InfoWindow(title: _schoolName ?? 'School'),
+          ),
       };
     });
   }
 
-  /// The van itself is drawn by [AnimatedVanMarker]; only the line to home
-  /// follows it here.
-  void _updateRouteLine() {
+  Future<void> _loadTrail() async {
+    try {
+      final r = await ApiService.get('/trips/$_currentTripId/trail');
+      final data = r.data is Map ? (r.data['data'] ?? r.data) : null;
+      final poly = data is Map ? data['polyline']?.toString() : null;
+      if (poly == null || poly.isEmpty || !mounted) return;
+      _trail
+        ..clear()
+        ..addAll(decodePolyline(poly));
+      _rebuildPolylines();
+    } catch (e) {
+      debugPrint('Tracking trail failed: $e');
+    }
+  }
+
+  /// Own child's stop, the school and the road line still to drive.
+  Future<void> _loadRoutePlan() async {
+    if (_currentTripId == null) return;
+    try {
+      final r = await ApiService.get('/trips/$_currentTripId/route-plan');
+      final data = r.data is Map ? (r.data['data'] ?? r.data) : null;
+      if (data is! Map || !mounted) return;
+      LatLng? point(dynamic m) {
+        if (m is! Map) return null;
+        final lat = (m['lat'] as num?)?.toDouble();
+        final lng = ((m['lng'] ?? m['long']) as num?)?.toDouble();
+        return lat == null || lng == null ? null : LatLng(lat, lng);
+      }
+
+      final stops = (data['stops'] as List? ?? []).whereType<Map>();
+      final mine = stops.where((s) => s['mine'] == true).toList();
+      final school = data['school'];
+      final poly = (data['plannedPath'] as Map?)?['polyline']?.toString();
+      _myStop = mine.isEmpty ? null : point(mine.first);
+      _schoolPoint = point(school);
+      _schoolName = school is Map ? school['name']?.toString() : null;
+      _plannedPath = poly == null || poly.isEmpty ? [] : decodePolyline(poly);
+      _setupMarkers();
+      _rebuildPolylines();
+    } catch (e) {
+      debugPrint('Tracking route-plan failed: $e');
+    }
+  }
+
+  void _rebuildPolylines() {
     if (!mounted) return;
     setState(() {
       _polylines = {
-        Polyline(
-          polylineId: const PolylineId('route'),
-          points: [_vanPosition, _homePosition],
-          color: const Color(0xFF1B3B69),
-          width: 4,
-          patterns: [
-            PatternItem.dash(20),
-            PatternItem.gap(10),
-          ],
-        ),
+        if (_plannedPath.length > 1)
+          Polyline(
+            polylineId: const PolylineId('planned'),
+            points: _plannedPath,
+            color: const Color(0xFF1B3B69),
+            width: 4,
+            patterns: [PatternItem.dash(20), PatternItem.gap(10)],
+          )
+        else
+          Polyline(
+            polylineId: const PolylineId('planned'),
+            points: [_vanPosition, _myStop ?? _homePosition],
+            color: const Color(0xFF1B3B69),
+            width: 4,
+            patterns: [PatternItem.dash(20), PatternItem.gap(10)],
+          ),
+        if (_trail.length > 1)
+          Polyline(
+            polylineId: const PolylineId('trail'),
+            points: List.of(_trail),
+            color: const Color(0xFF27AE60),
+            width: 5,
+          ),
       };
     });
   }
