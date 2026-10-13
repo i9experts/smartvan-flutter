@@ -512,11 +512,15 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
         if (m is! Map) return null;
         final lat = (m['lat'] as num?)?.toDouble();
         final lng = ((m['lng'] ?? m['long']) as num?)?.toDouble();
-        return lat == null || lng == null ? null : LatLng(lat, lng);
+        // The server sends 0,0 for stops/schools that have no coordinates yet.
+        if (lat == null || lng == null || (lat == 0 && lng == 0)) return null;
+        return LatLng(lat, lng);
       }
 
       final stops = (data['stops'] as List? ?? []).whereType<Map>();
-      final mine = stops.where((s) => s['mine'] == true).toList();
+      final mine = stops
+          .where((s) => s['mine'] == true && point(s) != null)
+          .toList();
       final school = data['school'];
       final poly = (data['plannedPath'] as Map?)?['polyline']?.toString();
       _myStop = mine.isEmpty ? null : point(mine.first);
