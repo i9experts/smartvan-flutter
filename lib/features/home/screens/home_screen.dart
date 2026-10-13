@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,8 +19,14 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
+  /// While the Home tab is showing, the "van is on the way" card is checked
+  /// this often, so it disappears soon after the driver ends the trip.
+  static const activeTripsRefresh = Duration(seconds: 30);
+
   int _currentIndex = 0;
+  Timer? _tripsTimer;
   Map<String, dynamic>? _profile;
   List<dynamic> _kids = [];
   List<dynamic> _alerts = [];
@@ -34,7 +41,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _tripsTimer = Timer.periodic(activeTripsRefresh, (_) {
+      if (_currentIndex == 0) _loadActiveTrips();
+    });
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _tripsTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Back from the background: a trip may have started or ended meanwhile.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _loadActiveTrips();
+  }
+
+  /// Switches the bottom tab; coming back to Home refreshes the trip card.
+  void _selectTab(int index) {
+    final backToHome = index == 0 && _currentIndex != 0;
+    setState(() => _currentIndex = index);
+    if (backToHome) _loadActiveTrips();
   }
 
   int _chatUnread = 0;
@@ -99,7 +130,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final data = raw['data'] ?? raw;
         if (mounted) setState(() => _banners = data is List ? data : []);
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Home load failed: $e');
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -112,7 +145,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final user = raw is Map && raw['data'] is Map ? raw['data'] : raw;
         setState(() => _profile = user is Map ? Map<String, dynamic>.from(user) : null);
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Home load failed: $e');
+    }
   }
 
   Future<void> _loadKids() async {
@@ -141,7 +176,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         setState(() => _activeTrips = list is List ? list : []);
       }
     } catch (_) {
-      if (mounted) setState(() => _activeTrips = []);
+      // Keep whatever is shown: a failed check must not blink the card away.
+      debugPrint('Home: active trips check failed');
     }
   }
 
@@ -1091,7 +1127,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       child: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: _selectTab,
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         selectedItemColor: const Color(0xFF1B3B69),

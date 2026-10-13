@@ -16,6 +16,11 @@ class ApiService {
     ),
   );
 
+  /// Tests swap the network out with this.
+  @visibleForTesting
+  static void useHttpAdapter(HttpClientAdapter adapter) =>
+      _dio.httpClientAdapter = adapter;
+
   static Future<SharedPreferences> getPrefs() async {
     return await SharedPreferences.getInstance();
   }
