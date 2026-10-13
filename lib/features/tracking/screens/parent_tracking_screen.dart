@@ -26,6 +26,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   Set<Polyline> _polylines = {};
   bool _isConnected = false;
   String? _connectionError;
+  /// True once the server confirmed 'joinedTrip' (we are in the trip room).
+  bool _joinedTrip = false;
   bool _isLoading = true;
   bool _noActiveTrip = false;
   Map<String, dynamic>? _tripData;
@@ -165,6 +167,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     );
 
     _socket!.onConnect((_) {
+      debugPrint('Tracking socket connected, joining trip $_currentTripId');
       if (mounted) setState(() {
         _isConnected = true;
         _connectionError = null;
@@ -172,6 +175,14 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       if (_currentTripId != null) {
         _socket!.emit('joinTrip', {'tripId': _currentTripId});
       }
+    });
+
+    _socket!.on('joinedTrip', (data) {
+      debugPrint('Tracking socket joinedTrip: $data');
+      if (mounted) setState(() {
+        _joinedTrip = true;
+        _connectionError = null;
+      });
     });
 
     // Server pushes per-kid ETA after each van update (computed at most
@@ -203,7 +214,10 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     });
 
     _socket!.onDisconnect((_) {
-      if (mounted) setState(() => _isConnected = false);
+      if (mounted) setState(() {
+        _isConnected = false;
+        _joinedTrip = false;
+      });
     });
 
     _socket!.onConnectError((data) {
@@ -211,7 +225,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       if (mounted) {
         setState(() {
           _isConnected = false;
-          _connectionError = data.toString();
+          _connectionError = _friendlyError(data);
         });
       }
     });
@@ -227,7 +241,14 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     });
 
     _socket!.on('error', (data) {
+      // joinTrip refusals ('Not authorized…', 'Trip not found') arrive here.
       debugPrint('Tracking socket error: $data');
+      if (mounted) {
+        setState(() {
+          _joinedTrip = false;
+          _connectionError = _friendlyError(data);
+        });
+      }
     });
 
     _socket!.on('locationUpdated', (data) {
@@ -249,6 +270,13 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     });
 
     _socket!.connect();
+  }
+
+  /// Server errors are `{ msg }` maps; anything else is shown as text.
+  String _friendlyError(dynamic data) {
+    if (data is Map && data['msg'] != null) return data['msg'].toString();
+    final text = data?.toString() ?? '';
+    return text.isEmpty ? 'Could not connect to live tracking' : text;
   }
 
   /// Backend doesn't broadcast speed — estimate it client-side from
@@ -324,6 +352,30 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 call('Call school', schoolPhone),
                 call('Call driver', driverPhone),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConnectionBanner() {
+    return Material(
+      color: const Color(0xFFE53935),
+      borderRadius: BorderRadius.circular(12),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Live tracking unavailable: $_connectionError',
+                style: const TextStyle(
+                    color: Colors.white, fontSize: 12, fontFamily: 'Poppins'),
+              ),
             ),
           ],
         ),
@@ -506,7 +558,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: _isConnected
+                            color: _joinedTrip
                                 ? const Color(0xFF27AE60)
                                 : const Color(0xFFFF4B4B),
                             shape: BoxShape.circle,
@@ -514,7 +566,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          _isConnected
+                          _joinedTrip
                               ? 'Live'
                               : (_connectionError != null
                                   ? 'Connection failed'
@@ -558,6 +610,14 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                         zoomControlsEnabled: false,
                         mapToolbarEnabled: false,
                       ),
+
+                      if (_connectionError != null && !_joinedTrip)
+                        Positioned(
+                          top: 12,
+                          left: 12,
+                          right: 72,
+                          child: _buildConnectionBanner(),
+                        ),
 
                       if (_driverSos != null)
                         Positioned(
@@ -770,8 +830,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
               _buildStat(
                 icon: Icons.route,
                 label: 'Status',
-                value: _isConnected ? 'Live' : 'Offline',
-                color: _isConnected
+                value: _joinedTrip ? 'Live' : 'Offline',
+                color: _joinedTrip
                     ? const Color(0xFF27AE60)
                     : const Color(0xFFFF4B4B),
               ),
