@@ -21,7 +21,7 @@ class NotificationRouter {
     if (_isRateTrip(data)) return '/rate-trip';
     if (type == 'CHAT_MESSAGE') return '/chats';
     if (type == 'PAYMENT_RECEIVED') return '/payment-history';
-    if (type == 'driver_sos' || type == 'ETA_UPDATE' || type == 'VAN_AT_STOP' || type.startsWith('GEOFENCE_')) {
+    if (type == 'driver_sos' || type == 'ETA_UPDATE' || type == 'VAN_AT_STOP' || type == 'TRAFFIC_DELAY' || type.startsWith('GEOFENCE_')) {
       return '/tracking';
     }
     if (type == 'drop_not_confirmed' || type == 'NO_SHOW') return '/alerts';
