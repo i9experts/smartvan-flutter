@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/map/animated_van_marker.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/storage/token_storage.dart';
 import '../../../core/widgets/skeletons/tracking_screen_skeleton.dart';
@@ -24,7 +24,6 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   LatLng _homePosition = const LatLng(24.8700, 67.0100);
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
-  bool _isConnected = false;
   String? _connectionError;
   /// True once the server confirmed 'joinedTrip' (we are in the trip room).
   bool _joinedTrip = false;
@@ -42,8 +41,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   String _driverName = 'Driver';
   String _vanNumber = 'SV-001';
   double _vanSpeed = 0.0;
-  LatLng? _lastSpeedPosition;
-  DateTime? _lastSpeedTime;
+  bool _hasSpeed = false;
+  /// Heading (degrees) of the latest fix, null when the server sent none.
+  double? _vanHeading;
+  /// Null until the van's position is known; the animated marker draws it.
+  LatLng? _vanFix;
 
   @override
   void initState() {
@@ -114,6 +116,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                 (lat as num).toDouble(),
                 (long as num).toDouble(),
               );
+              _vanFix = _vanPosition;
             }
           }
         });
@@ -169,7 +172,6 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     _socket!.onConnect((_) {
       debugPrint('Tracking socket connected, joining trip $_currentTripId');
       if (mounted) setState(() {
-        _isConnected = true;
         _connectionError = null;
       });
       if (_currentTripId != null) {
@@ -215,7 +217,6 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
 
     _socket!.onDisconnect((_) {
       if (mounted) setState(() {
-        _isConnected = false;
         _joinedTrip = false;
       });
     });
@@ -224,8 +225,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       debugPrint('Tracking socket connect_error: $data');
       if (mounted) {
         setState(() {
-          _isConnected = false;
-          _connectionError = _friendlyError(data);
+            _connectionError = _friendlyError(data);
         });
       }
     });
@@ -234,8 +234,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       debugPrint('Tracking socket connect_timeout: $data');
       if (mounted) {
         setState(() {
-          _isConnected = false;
-          _connectionError = 'Connection timed out';
+            _connectionError = 'Connection timed out';
         });
       }
     });
@@ -261,11 +260,17 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
       if (lat == null || long == null) return;
 
       final newPosition = LatLng(lat, long);
-      _updateSpeed(newPosition);
+      final speedKmh = (data['speedKmh'] as num?)?.toDouble();
+      final heading = (data['heading'] as num?)?.toDouble();
 
-      if (!mounted) return;
-      setState(() => _vanPosition = newPosition);
-      _updateVanMarker();
+      setState(() {
+        _vanPosition = newPosition;
+        _vanFix = newPosition;
+        _vanHeading = heading;
+        _hasSpeed = speedKmh != null;
+        if (speedKmh != null) _vanSpeed = speedKmh;
+      });
+      _updateRouteLine();
       _animateCamera();
     });
 
@@ -278,36 +283,6 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     final text = data?.toString() ?? '';
     return text.isEmpty ? 'Could not connect to live tracking' : text;
   }
-
-  /// Backend doesn't broadcast speed — estimate it client-side from
-  /// consecutive location updates using the Haversine formula.
-  void _updateSpeed(LatLng newPosition) {
-    final now = DateTime.now();
-    if (_lastSpeedPosition != null && _lastSpeedTime != null) {
-      final distanceMeters = _haversineMeters(_lastSpeedPosition!, newPosition);
-      final seconds = now.difference(_lastSpeedTime!).inMilliseconds / 1000.0;
-      if (seconds > 0) {
-        final speedKmh = (distanceMeters / seconds) * 3.6;
-        if (mounted) setState(() => _vanSpeed = speedKmh.clamp(0, 200));
-      }
-    }
-    _lastSpeedPosition = newPosition;
-    _lastSpeedTime = now;
-  }
-
-  double _haversineMeters(LatLng a, LatLng b) {
-    const R = 6371000.0;
-    final dLat = _toRad(b.latitude - a.latitude);
-    final dLng = _toRad(b.longitude - a.longitude);
-    final lat1 = _toRad(a.latitude);
-    final lat2 = _toRad(b.latitude);
-    final h = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(lat1) * math.cos(lat2) * math.sin(dLng / 2) * math.sin(dLng / 2);
-    final c = 2 * math.atan2(math.sqrt(h), math.sqrt(1 - h));
-    return R * c;
-  }
-
-  double _toRad(double deg) => deg * (math.pi / 180);
 
   Widget _buildDriverSosBanner() {
     final schoolPhone = _tripData?['schoolContact']?.toString();
@@ -416,16 +391,6 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     setState(() {
       _markers = {
         Marker(
-          markerId: const MarkerId('van'),
-          position: _vanPosition,
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueBlue),
-          infoWindow: InfoWindow(
-            title: 'SmartVan - $_vanNumber',
-            snippet: 'Driver: $_driverName',
-          ),
-        ),
-        Marker(
           markerId: const MarkerId('home'),
           position: _homePosition,
           icon: BitmapDescriptor.defaultMarkerWithHue(
@@ -452,24 +417,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
     });
   }
 
-  void _updateVanMarker() {
-    final updatedMarkers =
-        _markers.where((m) => m.markerId.value != 'van').toSet();
-    updatedMarkers.add(
-      Marker(
-        markerId: const MarkerId('van'),
-        position: _vanPosition,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-        infoWindow: InfoWindow(
-          title: 'SmartVan - $_vanNumber',
-          snippet: 'Driver: $_driverName',
-        ),
-      ),
-    );
-
+  /// The van itself is drawn by [AnimatedVanMarker]; only the line to home
+  /// follows it here.
+  void _updateRouteLine() {
     if (!mounted) return;
     setState(() {
-      _markers = updatedMarkers;
       _polylines = {
         Polyline(
           polylineId: const PolylineId('route'),
@@ -593,22 +545,28 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                     ? _buildNoActiveTripState()
                     : Stack(
                     children: [
-                      GoogleMap(
-                        initialCameraPosition: CameraPosition(
-                          target: _vanPosition,
-                          zoom: 14,
+                      AnimatedVanMarker(
+                        position: _vanFix,
+                        headingDegrees: _vanHeading,
+                        speedMetersPerSecond: _hasSpeed ? _vanSpeed / 3.6 : null,
+                        title: 'SmartVan - $_vanNumber',
+                        builder: (context, vanMarkers) => GoogleMap(
+                          initialCameraPosition: CameraPosition(
+                            target: _vanPosition,
+                            zoom: 14,
+                          ),
+                          onMapCreated: (controller) {
+                            _mapController = controller;
+                            Future.delayed(
+                                const Duration(milliseconds: 500), _fitBounds);
+                          },
+                          markers: {..._markers, ...vanMarkers},
+                          polylines: _polylines,
+                          myLocationEnabled: true,
+                          myLocationButtonEnabled: false,
+                          zoomControlsEnabled: false,
+                          mapToolbarEnabled: false,
                         ),
-                        onMapCreated: (controller) {
-                          _mapController = controller;
-                          Future.delayed(
-                              const Duration(milliseconds: 500), _fitBounds);
-                        },
-                        markers: _markers,
-                        polylines: _polylines,
-                        myLocationEnabled: true,
-                        myLocationButtonEnabled: false,
-                        zoomControlsEnabled: false,
-                        mapToolbarEnabled: false,
                       ),
 
                       if (_connectionError != null && !_joinedTrip)
