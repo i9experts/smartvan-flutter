@@ -158,213 +158,129 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AuthBackdrop(
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon:
-                          const Icon(Icons.arrow_back_ios, color: Colors.white),
-                      onPressed: () => context.go('/register'),
+        child: Stack(
+          children: [
+            AuthSheet(
+              children: [
+                AuthHeader(
+                  icon: Icons.message_outlined,
+                  title: 'OTP Verification',
+                  subtitle: 'Enter the 6-digit code sent to\n${widget.phone}',
+                ),
+                PinCodeTextField(
+                  appContext: context,
+                  length: 6,
+                  onChanged: (val) => setState(() => _otpCode = val),
+                  onCompleted: (val) => setState(() => _otpCode = val),
+                  keyboardType: TextInputType.number,
+                  animationType: AnimationType.fade,
+                  backgroundColor: Colors.transparent,
+                  cursorColor: const Color(0xFFFEC610),
+                  pinTheme: PinTheme(
+                    shape: PinCodeFieldShape.box,
+                    borderRadius: BorderRadius.circular(12),
+                    fieldHeight: 54,
+                    fieldWidth: 46,
+                    borderWidth: 1.2,
+                    activeFillColor: Colors.transparent,
+                    inactiveFillColor: Colors.transparent,
+                    selectedFillColor: Colors.transparent,
+                    activeColor: Colors.white,
+                    inactiveColor: Colors.white38,
+                    selectedColor: const Color(0xFFFEC610),
+                  ),
+                  enableActiveFill: true,
+                  textStyle: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _verifyOtp,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFEC610),
+                      foregroundColor: const Color(0xFF1B3B69),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF1B3B69),
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Verify OTP',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                     const Text(
-                      'Verify OTP',
+                      "Didn't receive the code? ",
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        color: Colors.white70,
+                        fontSize: 13,
                         fontFamily: 'Poppins',
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.message_outlined,
-                  size: 40,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'OTP Verification',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Enter the 6-digit code sent to\n${widget.phone}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 13,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              const SizedBox(height: 32),
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF5F6FA),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
-                    ),
-                  ),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 24),
-                        PinCodeTextField(
-                          appContext: context,
-                          length: 6,
-                          onChanged: (val) => setState(() => _otpCode = val),
-                          onCompleted: (val) => setState(() => _otpCode = val),
-                          keyboardType: TextInputType.number,
-                          animationType: AnimationType.fade,
-                          pinTheme: PinTheme(
-                            shape: PinCodeFieldShape.box,
-                            borderRadius: BorderRadius.circular(12),
-                            fieldHeight: 56,
-                            fieldWidth: 48,
-                            activeFillColor: Colors.white,
-                            inactiveFillColor: Colors.white,
-                            selectedFillColor: Colors.white,
-                            activeColor: const Color(0xFF1B3B69),
-                            inactiveColor: const Color(0xFFEAECF0),
-                            selectedColor: const Color(0xFF1B3B69),
-                          ),
-                          enableActiveFill: true,
-                          textStyle: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1B3B69),
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _verifyOtp,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1B3B69),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                    GestureDetector(
+                      onTap: _resendSeconds == 0 ? _resendOtp : null,
+                      child: _isResending
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFFFEC610),
                               ),
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Verify OTP',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              "Didn't receive the code? ",
+                            )
+                          : Text(
+                              _resendSeconds > 0
+                                  ? 'Resend in ${_resendSeconds}s'
+                                  : 'Resend OTP',
                               style: TextStyle(
-                                color: Color(0xFF8A94A6),
+                                color: _resendSeconds > 0
+                                    ? Colors.white54
+                                    : const Color(0xFFFEC610),
                                 fontSize: 13,
+                                fontWeight: FontWeight.w600,
                                 fontFamily: 'Poppins',
                               ),
                             ),
-                            GestureDetector(
-                              onTap: _resendSeconds == 0 ? _resendOtp : null,
-                              child: _isResending
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Color(0xFF1B3B69),
-                                      ),
-                                    )
-                                  : Text(
-                                      _resendSeconds > 0
-                                          ? 'Resend in ${_resendSeconds}s'
-                                          : 'Resend OTP',
-                                      style: TextStyle(
-                                        color: _resendSeconds > 0
-                                            ? const Color(0xFF8A94A6)
-                                            : const Color(0xFF1B3B69),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: 'Poppins',
-                                      ),
-                                    ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1B3B69).withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                color: Color(0xFF1B3B69),
-                                size: 20,
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'The OTP is valid for 10 minutes. Please do not share it with anyone.',
-                                  style: TextStyle(
-                                    color: Color(0xFF1B3B69),
-                                    fontSize: 12,
-                                    fontFamily: 'Poppins',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
+                  ],
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(height: 16),
+                const AuthInfoBox(
+                  text:
+                      'The OTP is valid for 10 minutes. Please do not share it with anyone.',
+                ),
+              ],
+            ),
+            AuthTopBar(
+              title: 'Verify OTP',
+              onBack: () => context.go('/register'),
+            ),
+          ],
         ),
       ),
     );

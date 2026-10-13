@@ -80,224 +80,102 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AuthBackdrop(
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              // Top bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon:
-                          const Icon(Icons.arrow_back_ios, color: Colors.white),
-                      onPressed: () => context.go('/login'),
+        child: Stack(
+          children: [
+            AuthSheet(
+              children: [
+                const AuthHeader(
+                  icon: Icons.lock_reset_outlined,
+                  title: 'Reset Password',
+                  subtitle: 'Enter your email to receive\na password reset OTP',
+                ),
+                Text(
+                  'Email Address',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                AuthTextField(
+                  controller: _emailController,
+                  hint: 'Enter your registered email',
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _sendOtp,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFEC610),
+                      foregroundColor: const Color(0xFF1B3B69),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF1B3B69),
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Send Reset OTP',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const AuthInfoBox(
+                  text:
+                      'We will send a 6-digit OTP to your registered email address. Please check your inbox.',
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                     const Text(
-                      'Forgot Password',
+                      'Remember your password? ',
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        color: Colors.white70,
+                        fontSize: 13,
                         fontFamily: 'Poppins',
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => context.go('/login'),
+                      child: const Text(
+                        'Sign In',
+                        style: TextStyle(
+                          color: Color(0xFFFEC610),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Poppins',
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 24),
-              // Lock icon
-              Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.lock_reset_outlined,
-                  size: 45,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Reset Password',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Enter your email to receive\na password reset OTP',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 13,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              const SizedBox(height: 32),
-              // Bottom card
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF5F6FA),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
-                    ),
-                  ),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Email Address',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF1A1A2E),
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            hintText: 'Enter your registered email',
-                            hintStyle: const TextStyle(
-                              color: Color(0xFF8A94A6),
-                              fontSize: 14,
-                              fontFamily: 'Poppins',
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.email_outlined,
-                              color: Color(0xFF1B3B69),
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFEAECF0)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFEAECF0)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                  color: Color(0xFF1B3B69), width: 2),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        // Send OTP Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _sendOtp,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1B3B69),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Send Reset OTP',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Info box
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1B3B69).withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.info_outline,
-                                color: Color(0xFF1B3B69),
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              const Expanded(
-                                child: Text(
-                                  'We will send a 6-digit OTP to your registered email address. Please check your inbox.',
-                                  style: TextStyle(
-                                    color: Color(0xFF1B3B69),
-                                    fontSize: 12,
-                                    fontFamily: 'Poppins',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Back to login
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Remember your password? ',
-                              style: TextStyle(
-                                color: Color(0xFF8A94A6),
-                                fontSize: 14,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => context.go('/login'),
-                              child: const Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  color: Color(0xFF1B3B69),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
+            AuthTopBar(
+              title: 'Forgot Password',
+              onBack: () => context.go('/login'),
+            ),
+          ],
         ),
       ),
     );

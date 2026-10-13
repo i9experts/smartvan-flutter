@@ -60,7 +60,8 @@ class KidsScreenSkeleton extends StatelessWidget {
               const SizedBox(height: 12),
               const Divider(height: 1, color: Color(0xFFEAECF0)),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 child: Row(
                   children: List.generate(
                     4,

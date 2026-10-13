@@ -65,7 +65,8 @@ class TrackingScreenSkeleton extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const SkeletonBox(height: 48, radius: 12, width: double.infinity),
+                  const SkeletonBox(
+                      height: 48, radius: 12, width: double.infinity),
                 ],
               ),
             ),

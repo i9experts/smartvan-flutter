@@ -89,204 +89,137 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.sizeOf(context).height;
-    final compact = screenHeight < 700;
-    // Hide the header while the keyboard is up so the form and Login stay visible.
+    // Hide the heading while the keyboard is up so the form and Login stay visible.
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     return Scaffold(
       body: AuthBackdrop(
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              if (!keyboardOpen) ...[
-              const SizedBox(height: 24),
-              // Logo
-              Container(
-                width: compact ? 72 : 100,
-                height: compact ? 72 : 100,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.directions_bus,
-                      size: 48,
-                      color: Color(0xFF1B3B69),
-                    ),
+        child: AuthSheet(
+          children: [
+            // One fixed slot (not a conditional spread) so the fields below keep
+            // their element/focus when the keyboard opens and this collapses.
+            keyboardOpen
+                ? const SizedBox.shrink()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Welcome Back!',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFFEC610),
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        "Sign in to track your child's journey",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white70,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+            _buildInputLabel('Email Address'),
+            const SizedBox(height: 8),
+            AuthTextField(
+              controller: _emailController,
+              hint: 'Enter your email',
+              icon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 12),
+            _buildInputLabel('Password'),
+            const SizedBox(height: 8),
+            AuthTextField(
+              controller: _passwordController,
+              hint: 'Enter your password',
+              icon: Icons.lock_outlined,
+              obscureText: _obscurePassword,
+              suffix: authVisibilityToggle(
+                obscured: _obscurePassword,
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => context.go('/forgot-password'),
+                child: const Text(
+                  'Forgot Password?',
+                  style: TextStyle(
+                    color: Color(0xFFFEC610),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Poppins',
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              const Text(
-                'Welcome Back!',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontFamily: 'Poppins',
-                  shadows: [Shadow(color: Color(0x99000000), blurRadius: 10)],
-                ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Sign in to track your child\'s journey',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.white,
-                  fontFamily: 'Poppins',
-                  shadows: [Shadow(color: Color(0x99000000), blurRadius: 10)],
-                ),
-              ),
-              // Leaves room for the van in the backdrop photo.
-              SizedBox(height: screenHeight * (compact ? 0.1 : 0.23)),
-              ] else
-                const SizedBox(height: 16),
-              // Bottom card
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF5F6FA),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
-                    ),
+            ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _login,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFEC610),
+                  foregroundColor: const Color(0xFF1B3B69),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: keyboardOpen ? 0 : 16),
-                        // Email field
-                        _buildInputLabel('Email Address'),
-                        const SizedBox(height: 8),
-                        _buildTextField(
-                          controller: _emailController,
-                          hint: 'Enter your email',
-                          icon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
+                  elevation: 0,
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF1B3B69),
+                          strokeWidth: 2,
                         ),
-                        const SizedBox(height: 20),
-                        // Password field
-                        _buildInputLabel('Password'),
-                        const SizedBox(height: 8),
-                        _buildTextField(
-                          controller: _passwordController,
-                          hint: 'Enter your password',
-                          icon: Icons.lock_outlined,
-                          obscureText: _obscurePassword,
-                          suffix: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              color: const Color(0xFF8A94A6),
-                              size: 20,
-                            ),
-                            onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword),
-                          ),
+                      )
+                    : const Text(
+                        'Login',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Poppins',
                         ),
-                        SizedBox(height: keyboardOpen ? 0 : 12),
-                        // Forgot password
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () => context.go('/forgot-password'),
-                            child: const Text(
-                              'Forgot Password?',
-                              style: TextStyle(
-                                color: Color(0xFF1B3B69),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: keyboardOpen ? 4 : 24),
-                        // Login button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _login,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1B3B69),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Login',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Register link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              "Don't have an account? ",
-                              style: TextStyle(
-                                color: Color(0xFF8A94A6),
-                                fontSize: 13,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => context.go('/register'),
-                              child: const Text(
-                                'Sign Up',
-                                style: TextStyle(
-                                  color: Color(0xFF1B3B69),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                      ],
+                      ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Don't have an account? ",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => context.go('/register'),
+                  child: const Text(
+                    'Sign Up',
+                    style: TextStyle(
+                      color: Color(0xFFFEC610),
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -298,54 +231,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       style: const TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: Color(0xFF1A1A2E),
-        fontFamily: 'Poppins',
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    bool obscureText = false,
-    TextInputType keyboardType = TextInputType.text,
-    Widget? suffix,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        style: const TextStyle(
-          fontSize: 14,
-          color: Color(0xFF1A1A2E),
-          fontFamily: 'Poppins',
-        ),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(
-            color: Color(0xFF8A94A6),
-            fontSize: 14,
-            fontFamily: 'Poppins',
-          ),
-          prefixIcon: Icon(icon, color: const Color(0xFF8A94A6), size: 20),
-          suffixIcon: suffix,
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        ),
+        fontFamily: 'Poppins',
       ),
     );
   }

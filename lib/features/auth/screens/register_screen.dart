@@ -107,12 +107,183 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AuthBackdrop(
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              // Top bar
-              Padding(
+        child: Stack(
+          children: [
+            AuthSheet(
+              children: [
+                // Full Name
+                _buildLabel('Full Name'),
+                const SizedBox(height: 8),
+                _buildTextField(
+                  controller: _nameController,
+                  hint: 'Enter your full name',
+                  icon: Icons.person_outlined,
+                  keyboardType: TextInputType.name,
+                ),
+                const SizedBox(height: 16),
+
+                // Email
+                _buildLabel('Email Address'),
+                const SizedBox(height: 8),
+                _buildTextField(
+                  controller: _emailController,
+                  hint: 'Enter your email',
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+
+                // Phone
+                _buildLabel('Phone Number'),
+                const SizedBox(height: 8),
+                _buildTextField(
+                  controller: _phoneController,
+                  hint: 'Enter your phone number',
+                  icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 16),
+
+                // Password
+                _buildLabel('Password'),
+                const SizedBox(height: 8),
+                _buildPasswordField(
+                  controller: _passwordController,
+                  hint: 'Create a password',
+                  obscure: _obscurePassword,
+                  onToggle: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                ),
+                const SizedBox(height: 16),
+
+                // Confirm Password
+                _buildLabel('Confirm Password'),
+                const SizedBox(height: 8),
+                _buildPasswordField(
+                  controller: _confirmPasswordController,
+                  hint: 'Confirm your password',
+                  obscure: _obscureConfirm,
+                  onToggle: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
+                ),
+                const SizedBox(height: 8),
+
+                // Terms & Conditions
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Checkbox(
+                      value: _agreedToTerms,
+                      onChanged: (val) =>
+                          setState(() => _agreedToTerms = val ?? false),
+                      activeColor: const Color(0xFFFEC610),
+                      checkColor: const Color(0xFF1B3B69),
+                      side: const BorderSide(color: Colors.white70, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: RichText(
+                          text: const TextSpan(
+                            text: 'I agree to the ',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                              fontFamily: 'Poppins',
+                            ),
+                            children: [
+                              TextSpan(
+                                text: 'Terms & Conditions',
+                                style: TextStyle(
+                                  color: Color(0xFFFEC610),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              TextSpan(text: ' and '),
+                              TextSpan(
+                                text: 'Privacy Policy',
+                                style: TextStyle(
+                                  color: Color(0xFFFEC610),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Register Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _register,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFEC610),
+                      foregroundColor: const Color(0xFF1B3B69),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF1B3B69),
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Create Account',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Login Link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Already have an account? ',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => context.go('/login'),
+                      child: const Text(
+                        'Sign In',
+                        style: TextStyle(
+                          color: Color(0xFFFEC610),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            // Top bar
+            SafeArea(
+              child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
                   children: [
@@ -133,217 +304,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
-              // Bottom white card
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF5F6FA),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
-                    ),
-                  ),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Join SmartVan',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1A1A2E),
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Create your account to get started',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF8A94A6),
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Full Name
-                        _buildLabel('Full Name'),
-                        const SizedBox(height: 8),
-                        _buildTextField(
-                          controller: _nameController,
-                          hint: 'Enter your full name',
-                          icon: Icons.person_outlined,
-                          keyboardType: TextInputType.name,
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Email
-                        _buildLabel('Email Address'),
-                        const SizedBox(height: 8),
-                        _buildTextField(
-                          controller: _emailController,
-                          hint: 'Enter your email',
-                          icon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Phone
-                        _buildLabel('Phone Number'),
-                        const SizedBox(height: 8),
-                        _buildTextField(
-                          controller: _phoneController,
-                          hint: 'Enter your phone number',
-                          icon: Icons.phone_outlined,
-                          keyboardType: TextInputType.phone,
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Password
-                        _buildLabel('Password'),
-                        const SizedBox(height: 8),
-                        _buildPasswordField(
-                          controller: _passwordController,
-                          hint: 'Create a password',
-                          obscure: _obscurePassword,
-                          onToggle: () => setState(
-                              () => _obscurePassword = !_obscurePassword),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Confirm Password
-                        _buildLabel('Confirm Password'),
-                        const SizedBox(height: 8),
-                        _buildPasswordField(
-                          controller: _confirmPasswordController,
-                          hint: 'Confirm your password',
-                          obscure: _obscureConfirm,
-                          onToggle: () => setState(
-                              () => _obscureConfirm = !_obscureConfirm),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Terms & Conditions
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Checkbox(
-                              value: _agreedToTerms,
-                              onChanged: (val) =>
-                                  setState(() => _agreedToTerms = val ?? false),
-                              activeColor: const Color(0xFF1B3B69),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: RichText(
-                                  text: const TextSpan(
-                                    text: 'I agree to the ',
-                                    style: TextStyle(
-                                      color: Color(0xFF8A94A6),
-                                      fontSize: 13,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                    children: [
-                                      TextSpan(
-                                        text: 'Terms & Conditions',
-                                        style: TextStyle(
-                                          color: Color(0xFF1B3B69),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      TextSpan(text: ' and '),
-                                      TextSpan(
-                                        text: 'Privacy Policy',
-                                        style: TextStyle(
-                                          color: Color(0xFF1B3B69),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Register Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _register,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1B3B69),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Create Account',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Login Link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Already have an account? ',
-                              style: TextStyle(
-                                color: Color(0xFF8A94A6),
-                                fontSize: 14,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => context.go('/login'),
-                              child: const Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  color: Color(0xFF1B3B69),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -355,7 +317,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       style: const TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: Color(0xFF1A1A2E),
+        color: Colors.white,
         fontFamily: 'Poppins',
       ),
     );
@@ -367,32 +329,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
   }) {
-    return TextFormField(
+    return AuthTextField(
       controller: controller,
+      hint: hint,
+      icon: icon,
       keyboardType: keyboardType,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(
-          color: Color(0xFF8A94A6),
-          fontSize: 14,
-          fontFamily: 'Poppins',
-        ),
-        prefixIcon: Icon(icon, color: const Color(0xFF1B3B69)),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEAECF0)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEAECF0)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1B3B69), width: 2),
-        ),
-      ),
     );
   }
 
@@ -402,40 +343,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     required bool obscure,
     required VoidCallback onToggle,
   }) {
-    return TextFormField(
+    return AuthTextField(
       controller: controller,
+      hint: hint,
+      icon: Icons.lock_outlined,
       obscureText: obscure,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(
-          color: Color(0xFF8A94A6),
-          fontSize: 14,
-          fontFamily: 'Poppins',
-        ),
-        prefixIcon:
-            const Icon(Icons.lock_outlined, color: Color(0xFF1B3B69)),
-        suffixIcon: IconButton(
-          icon: Icon(
-            obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            color: const Color(0xFF8A94A6),
-          ),
-          onPressed: onToggle,
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEAECF0)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEAECF0)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1B3B69), width: 2),
-        ),
-      ),
+      suffix: authVisibilityToggle(obscured: obscure, onPressed: onToggle),
     );
   }
 }

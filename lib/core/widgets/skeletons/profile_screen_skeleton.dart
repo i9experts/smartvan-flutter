@@ -97,8 +97,7 @@ class ProfileScreenSkeleton extends StatelessWidget {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: const [
                                     SkeletonLine(widthFactor: 0.3, height: 9),
                                     SizedBox(height: 6),

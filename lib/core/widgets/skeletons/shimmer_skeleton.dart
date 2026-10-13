@@ -96,8 +96,8 @@ class SkeletonLine extends StatelessWidget {
             : fallbackWidth;
         return Align(
           alignment: Alignment.centerLeft,
-          child:
-              SkeletonBox(width: width, height: height, radius: height / 2, margin: margin),
+          child: SkeletonBox(
+              width: width, height: height, radius: height / 2, margin: margin),
         );
       },
     );
