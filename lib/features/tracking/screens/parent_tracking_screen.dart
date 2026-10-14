@@ -35,7 +35,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
   static const _followZoom = 15.0;
 
   /// The compass button: shows the map's bearing, a tap turns north up.
-  final MapCompassController _compass = MapCompassController();
+  late final MapCompassController _compass =
+      MapCompassController(follow: _follow, headingUpAllowed: false);
   io.Socket? _socket;
   LatLng _vanPosition = const LatLng(24.8607, 67.0011);
   LatLng _homePosition = const LatLng(24.8700, 67.0100);

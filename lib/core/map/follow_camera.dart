@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'map_compass.dart';
 import 'van_pose_animator.dart';
 
 /// Keeps a map's camera on the van while [following], and lets the user take
@@ -9,8 +10,14 @@ import 'van_pose_animator.dart';
 /// Same idea as the driver app's controller; [following] can start off (the
 /// parent's map first fits the whole route), and [pause] leaves follow mode
 /// without offering "Re-center".
-class FollowCameraController extends ChangeNotifier {
-  FollowCameraController({bool following = true}) : _following = following;
+class FollowCameraController extends ChangeNotifier implements CompassFollow {
+  FollowCameraController({bool following = true, DateTime Function()? clock})
+      : _following = following,
+        _now = clock ?? DateTime.now;
+
+  /// While a camera animation runs (compass tap), the camera is not moved.
+  DateTime? _holdUntil;
+  final DateTime Function() _now;
 
   bool _following;
   bool _released = false;
@@ -18,7 +25,25 @@ class FollowCameraController extends ChangeNotifier {
   Future<void> Function(LatLng)? _move;
   Future<void> Function(LatLng)? _animate;
 
+  @override
   bool get following => _following;
+
+  /// This map is only ever north-up.
+  @override
+  bool get headingUp => false;
+
+  @override
+  void enterHeadingUp() {}
+
+  @override
+  void exitHeadingUp() {}
+
+  bool get _held => _holdUntil != null && _now().isBefore(_holdUntil!);
+
+  /// Do not move the camera for [duration]: an animation (the compass's
+  /// north turn) is running, and a move on every frame would cancel it.
+  @override
+  void holdCamera(Duration duration) => _holdUntil = _now().add(duration);
 
   /// True after the user moved the map away while it was following — the
   /// moment to offer "Re-center".
@@ -52,7 +77,7 @@ class FollowCameraController extends ChangeNotifier {
   /// The van is now drawn at [pose]; follows it when following.
   void onPose(VanPose pose) {
     _last = pose;
-    if (_following) _run(_move, pose.position);
+    if (_following && !_held) _run(_move, pose.position);
   }
 
   /// The user touched the map: stop following (and offer "Re-center" if it

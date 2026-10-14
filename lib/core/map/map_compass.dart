@@ -37,6 +37,11 @@ CompassTapAction compassTapAction({
   return CompassTapAction.pointNorth;
 }
 
+/// How long the compass's camera animation takes; the follow camera stands
+/// still that long, because moving the camera on every frame would cancel
+/// the animation half-way.
+const compassAnimation = Duration(milliseconds: 700);
+
 /// What the compass needs from the follow-the-van camera. Only the driver's
 /// map has a heading-up mode; a map without one passes no follow at all.
 abstract interface class CompassFollow implements Listenable {
@@ -48,15 +53,22 @@ abstract interface class CompassFollow implements Listenable {
 
   /// Back to a north-up map (still following if it was).
   void exitHeadingUp();
+
+  /// Do not move the camera for [duration]: an animation is running.
+  void holdCamera(Duration duration);
 }
 
 /// The camera's bearing and zoom for the compass, and what a tap does.
 ///
 /// Feed it the map's `onCameraMove`; listen to it to rotate the needle.
 class MapCompassController extends ChangeNotifier {
-  MapCompassController({this.follow}) {
+  MapCompassController({this.follow, this.headingUpAllowed = true}) {
     follow?.addListener(notifyListeners);
   }
+
+  /// False for a map that is only ever north-up (the parent's), even though
+  /// it has a follow camera.
+  final bool headingUpAllowed;
 
   /// The follow camera whose heading-up mode the compass switches; null for a
   /// map that is only ever north-up.
@@ -79,7 +91,7 @@ class MapCompassController extends ChangeNotifier {
         bearing: bearing,
         following: follow?.following ?? false,
         headingUp: headingUp,
-        headingUpAllowed: follow != null,
+        headingUpAllowed: follow != null && headingUpAllowed,
       );
 
   /// Hooks up the map: [animateTo] glides the camera to a position.
@@ -103,6 +115,7 @@ class MapCompassController extends ChangeNotifier {
         follow?.enterHeadingUp();
       case CompassTapAction.pointNorth:
         follow?.exitHeadingUp();
+        follow?.holdCamera(compassAnimation);
         _animateTo
             ?.call(CameraPosition(
           target: _camera.target,

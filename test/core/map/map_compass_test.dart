@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:smartvan/core/map/follow_camera.dart';
 import 'package:smartvan/core/map/map_compass.dart';
+import 'package:smartvan/core/map/van_pose_animator.dart';
 
 void main() {
   group('compassTapAction', () {
@@ -76,6 +78,55 @@ void main() {
           const CameraPosition(target: LatLng(1, 2), zoom: 14, bearing: 90));
       compass.onPressed();
       await Future<void>.delayed(Duration.zero);
+    });
+  });
+
+  group('with the follow camera (parent map: north up only)', () {
+    late DateTime now;
+    late FollowCameraController follow;
+    late MapCompassController compass;
+    late List<LatLng> moved;
+    late List<CameraPosition> animated;
+
+    setUp(() {
+      now = DateTime(2026, 10, 14, 10);
+      moved = [];
+      animated = [];
+      follow = FollowCameraController(following: true, clock: () => now)
+        ..attach(move: (p) async => moved.add(p), animate: (_) async {});
+      compass = MapCompassController(follow: follow, headingUpAllowed: false)
+        ..attach(animateTo: (p) async => animated.add(p));
+      compass.onCameraMove(const CameraPosition(
+          target: LatLng(24.9, 67.0), zoom: 15, bearing: 80));
+    });
+
+    tearDown(() {
+      compass.dispose();
+      follow.dispose();
+    });
+
+    test('a north tap while following holds the camera for the animation', () {
+      follow.onPose(const VanPose(LatLng(1, 1), 0));
+      expect(moved, hasLength(1));
+      compass.onPressed();
+      expect(animated.single.bearing, 0);
+
+      now = now.add(const Duration(milliseconds: 300));
+      follow.onPose(const VanPose(LatLng(1, 2), 0));
+      expect(moved, hasLength(1), reason: 'a move would cancel the turn');
+
+      now = now.add(const Duration(milliseconds: 500));
+      follow.onPose(const VanPose(LatLng(1, 3), 0));
+      expect(moved, hasLength(2));
+    });
+
+    test('on a north map, following: still only north (no heading-up)', () {
+      compass.onCameraMove(const CameraPosition(
+          target: LatLng(24.9, 67.0), zoom: 15, bearing: 0));
+      expect(compass.nextAction, CompassTapAction.pointNorth);
+      compass.onPressed();
+      expect(compass.headingUp, isFalse);
+      expect(follow.headingUp, isFalse);
     });
   });
 }
