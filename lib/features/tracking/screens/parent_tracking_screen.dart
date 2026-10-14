@@ -7,6 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/map/animated_van_marker.dart';
 import '../../../core/map/follow_camera.dart';
+import '../../../core/map/map_compass.dart';
+import '../../../core/map/map_compass_button.dart';
 import '../../../core/map/polyline_codec.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/storage/token_storage.dart';
@@ -31,6 +33,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
   final FollowCameraController _follow =
       FollowCameraController(following: false);
   static const _followZoom = 15.0;
+
+  /// The compass button: shows the map's bearing, a tap turns north up.
+  final MapCompassController _compass = MapCompassController();
   io.Socket? _socket;
   LatLng _vanPosition = const LatLng(24.8607, 67.0011);
   LatLng _homePosition = const LatLng(24.8700, 67.0100);
@@ -102,6 +107,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
     _clockTimer?.cancel();
     _clock.dispose();
     _planTimer?.cancel();
+    _compass.dispose();
     _follow.dispose();
     tearDownSocket(_socket);
     _socket = null;
@@ -759,9 +765,15 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
                             _mapController = controller;
                             _follow.attachMap(controller,
                                 recenterZoom: _followZoom);
+                            _compass.attachMap(controller);
                             Future.delayed(
                                 const Duration(milliseconds: 500), _fitAll);
                           },
+                          onCameraMove: _compass.onCameraMove,
+                          // Our own compass button replaces Google's; the
+                          // parent can turn the map, but it never tilts.
+                          compassEnabled: false,
+                          rotateGesturesEnabled: true,
                           tiltGesturesEnabled: false,
                           // Keeps the van and the camera centre above the info card.
                           padding: const EdgeInsets.only(bottom: 300),
@@ -820,14 +832,24 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
                         ),
                       ),
 
-                      // Offered once the parent moved the map away from the van.
+                      // The compass is always there; Re-center joins it once the
+                      // parent moved the map away from the van.
                       Positioned(
                         right: 16,
                         bottom: 312,
                         child: ListenableBuilder(
-                          listenable: _follow,
-                          builder: (context, _) => _follow.showRecenter
-                              ? FloatingActionButton.extended(
+                          listenable: Listenable.merge([_follow, _compass]),
+                          builder: (context, _) => Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              MapCompassButton(
+                                bearing: _compass.bearing,
+                                semanticLabel: 'Point map north',
+                                onPressed: _compass.onPressed,
+                              ),
+                              if (_follow.showRecenter) ...[
+                                const SizedBox(height: 8),
+                                FloatingActionButton.extended(
                                   heroTag: null,
                                   onPressed: _centerOnVan,
                                   backgroundColor: Colors.white,
@@ -841,8 +863,10 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
                                       fontFamily: 'Poppins',
                                     ),
                                   ),
-                                )
-                              : const SizedBox.shrink(),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
                       ),
 
