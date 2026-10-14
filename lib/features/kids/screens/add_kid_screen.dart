@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../core/network/api_service.dart';
 import 'home_address_picker_screen.dart';
+import '../../../core/widgets/bottom_inset.dart';
 
 // Matches the class list used in the admin panel's Student Management —
 // keeping this consistent everywhere avoids free-text grade values
@@ -230,7 +231,7 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
           // Form
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: withBottomInset(context, const EdgeInsets.all(20)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

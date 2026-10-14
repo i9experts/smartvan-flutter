@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/network/api_errors.dart';
 import '../fees_api.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 
 /// Loads GET /fees/receipt/:paymentId and shows it, with WhatsApp sharing.
 class ReceiptSheet extends StatefulWidget {
@@ -10,7 +11,7 @@ class ReceiptSheet extends StatefulWidget {
   const ReceiptSheet({super.key, required this.paymentId});
 
   static Future<void> show(BuildContext context, String paymentId) {
-    return showModalBottomSheet<void>(
+    return showAppBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,

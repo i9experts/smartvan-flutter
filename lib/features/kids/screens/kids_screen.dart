@@ -10,6 +10,7 @@ import '../../../core/network/api_errors.dart';
 import '../../chat/chat_api.dart';
 import '../widgets/absence_sheet.dart';
 import 'add_kid_screen.dart' show kGradeLevels;
+import '../../../core/widgets/app_bottom_sheet.dart';
 
 class KidsScreen extends ConsumerStatefulWidget {
   const KidsScreen({super.key});
@@ -477,7 +478,7 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
 
   /// Edit / Remove live behind "More" to keep the action row readable.
   void _showMoreActions(Map<String, dynamic> kid) {
-    showModalBottomSheet<void>(
+    showAppBottomSheet<void>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
@@ -575,17 +576,9 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
   }
 
   void _showTripHistory(Map<String, dynamic> kid) {
-    showModalBottomSheet(
+    showAppBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
-        ),
+      builder: (context) => Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -647,10 +640,8 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
     String? existingImageUrl = kid['image'];
     bool isSaving = false;
 
-    showModalBottomSheet(
+    showAppBottomSheet<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (sheetContext) => StatefulBuilder(
         builder: (sheetContext, setSheetState) {
           Future<void> pickImage() async {
@@ -739,19 +730,8 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
           }
 
           return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-            ),
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-              ),
-              padding: const EdgeInsets.all(24),
-              child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1025,7 +1005,6 @@ class _KidsScreenState extends ConsumerState<KidsScreen> {
                   ],
                 ),
               ),
-            ),
           );
         },
       ),

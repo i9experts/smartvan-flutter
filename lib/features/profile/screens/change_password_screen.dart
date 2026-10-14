@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/widgets/bottom_inset.dart';
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -189,7 +190,7 @@ class _ChangePasswordScreenState
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: withBottomInset(context, const EdgeInsets.all(20)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

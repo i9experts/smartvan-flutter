@@ -4,6 +4,7 @@ import '../../../core/network/api_errors.dart';
 import 'student_card_api.dart';
 import 'student_card_pdf.dart';
 import 'student_card_view.dart';
+import '../../../core/widgets/bottom_inset.dart';
 
 /// Parent: view a child's SmartVan student card and save/print it as PDF.
 class StudentCardScreen extends StatefulWidget {
@@ -85,7 +86,7 @@ class _StudentCardScreenState extends State<StudentCardScreen> {
           }
           final card = snap.data!;
           return ListView(
-            padding: const EdgeInsets.all(20),
+            padding: withBottomInset(context, const EdgeInsets.all(20)),
             children: [
               Container(
                 decoration: BoxDecoration(

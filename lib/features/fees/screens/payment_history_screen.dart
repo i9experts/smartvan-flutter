@@ -4,6 +4,7 @@ import '../../../core/widgets/skeletons/payment_history_skeleton.dart';
 import '../fees_api.dart';
 import '../widgets/pay_online_sheet.dart';
 import '../widgets/receipt_sheet.dart';
+import '../../../core/widgets/bottom_inset.dart';
 
 class PaymentHistoryScreen extends StatefulWidget {
   const PaymentHistoryScreen({super.key});
@@ -216,7 +217,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
       color: _navy,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: withBottomInset(context, const EdgeInsets.all(16)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/network/api_errors.dart';
 import '../fees_api.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 
 /// Pay one fee online: choose a method → complete the checkout.
 /// Pops `true` when the payment succeeded.
@@ -20,7 +21,7 @@ class PayOnlineSheet extends StatefulWidget {
 
   static Future<bool?> show(BuildContext context,
       {required String paymentId, required String amountLabel, required List<PayMethod> methods}) {
-    return showModalBottomSheet<bool>(
+    return showAppBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/network/api_errors.dart';
 import '../absence_api.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 
 /// Mark a child absent (today, tomorrow or a date) and see / cancel
 /// upcoming absences. The driver is told immediately for today.
@@ -11,7 +12,7 @@ class AbsenceSheet extends StatefulWidget {
   const AbsenceSheet({super.key, required this.kidId, required this.kidName});
 
   static Future<void> show(BuildContext context, {required String kidId, required String kidName}) {
-    return showModalBottomSheet<void>(
+    return showAppBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,

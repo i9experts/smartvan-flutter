@@ -671,6 +671,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
 
   @override
   Widget build(BuildContext context) {
+    // 0 as a tab (the bottom bar already clears it); the nav bar's height when
+    // opened as its own route.
+    final navInset = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
       body: Column(
@@ -777,7 +780,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
                           rotateGesturesEnabled: true,
                           tiltGesturesEnabled: false,
                           // Keeps the van and the camera centre above the info card.
-                          padding: const EdgeInsets.only(bottom: 300),
+                          padding: EdgeInsets.only(bottom: 300 + navInset),
                           markers: {..._markers, ...vanMarkers},
                           polylines: _polylines,
                           myLocationEnabled: true,
@@ -837,7 +840,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
                       // parent moved the map away from the van.
                       Positioned(
                         right: 16,
-                        bottom: 312,
+                        bottom: 312 + navInset,
                         child: ListenableBuilder(
                           listenable: Listenable.merge([_follow, _compass]),
                           builder: (context, _) => Column(
@@ -873,7 +876,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
 
                       // Bottom Info Card
                       Positioned(
-                        bottom: 0,
+                        bottom: navInset,
                         left: 0,
                         right: 0,
                         child: _buildInfoCard(),
