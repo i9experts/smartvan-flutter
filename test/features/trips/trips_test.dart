@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartvan/core/network/api_service.dart';
 import 'package:smartvan/features/home/screens/home_screen.dart';
 import 'package:smartvan/features/trips/screens/trip_details_screen.dart';
-import 'package:smartvan/features/trips/screens/trip_history_screen.dart';
+import 'package:smartvan/features/trips/widgets/recent_trips_section.dart';
 import 'package:smartvan/features/trips/trips_api.dart';
 
 const _child = {
@@ -212,30 +212,47 @@ void main() {
     });
   });
 
-  group('Trip History', () {
-    testWidgets('lists trips, and shows the empty state', (tester) async {
+  group('Recent trips (Track tab)', () {
+    Future<void> open(WidgetTester tester) async {
       await setBigView(tester);
-      await tester.pumpWidget(const MaterialApp(home: TripHistoryScreen()));
+      await tester.pumpWidget(const MaterialApp(
+          home: Scaffold(body: SingleChildScrollView(child: RecentTripsSection()))));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text('Ayesha'), findsOneWidget);
+    }
 
+    testWidgets('lists trips under their day', (tester) async {
+      await open(tester);
+      expect(find.text('Recent trips'), findsOneWidget);
+      expect(find.text('Ayesha'), findsOneWidget);
+      expect(
+          find.text(dayLabel(
+              DateTime.utc(2026, 10, 15, 2, 41), DateTime.now().toUtc())),
+          findsOneWidget);
+    });
+
+    testWidgets('empty state', (tester) async {
       api.emptyCompleted = true;
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pumpWidget(const MaterialApp(home: TripHistoryScreen()));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+      await open(tester);
       expect(find.text('No completed trips yet'), findsOneWidget);
     });
 
-    testWidgets('shows an error with a retry button', (tester) async {
+    testWidgets('error state with retry', (tester) async {
       api.completedFails = true;
-      await setBigView(tester);
-      await tester.pumpWidget(const MaterialApp(home: TripHistoryScreen()));
+      await open(tester);
+      expect(find.textContaining('No internet'), findsOneWidget);
+      api.completedFails = false;
+      await tester.tap(find.textContaining('Tap to retry'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.textContaining('No internet'), findsOneWidget);
-      expect(find.text('Try again'), findsOneWidget);
+      expect(find.text('Ayesha'), findsOneWidget);
     });
+  });
+
+  test('day labels use the Pakistan calendar day', () {
+    final now = DateTime.utc(2026, 10, 15, 20, 0); // 16 Oct 01:00 PKT
+    expect(dayLabel(DateTime.utc(2026, 10, 15, 21, 0), now), 'Today');
+    expect(dayLabel(DateTime.utc(2026, 10, 15, 2, 0), now), 'Yesterday');
+    expect(dayLabel(DateTime.utc(2026, 10, 13, 2, 0), now), '13 Oct 2026');
   });
 }

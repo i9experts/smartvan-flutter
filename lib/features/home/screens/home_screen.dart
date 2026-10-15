@@ -238,7 +238,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
             ),
             TextButton(
-              onPressed: () => context.push('/trip-history'),
+              onPressed: () => _selectTab(1),
               child: const Text(
                 'View all',
                 style: TextStyle(

@@ -30,6 +30,20 @@ String distanceText(num meters) => meters < 1000
     ? '${meters.round()} m'
     : '${(meters / 1000).toStringAsFixed(1)} km';
 
+/// "Today", "Yesterday" or "14 Oct 2026", by Pakistan calendar day.
+String dayLabel(DateTime? utc, DateTime nowUtc) {
+  if (utc == null) return 'Earlier';
+  DateTime day(DateTime d) {
+    final p = d.add(pktOffset);
+    return DateTime.utc(p.year, p.month, p.day);
+  }
+
+  final diff = day(nowUtc).difference(day(utc)).inDays;
+  if (diff == 0) return 'Today';
+  if (diff == 1) return 'Yesterday';
+  return pktDate(utc);
+}
+
 String tripTypeLabel(String type) => type == 'drop' ? 'Drop' : 'Pick';
 
 String childStatusLabel(String status) {

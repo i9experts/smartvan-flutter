@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import '../../trips/widgets/recent_trips_section.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
@@ -57,6 +60,8 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
   bool _joinedTrip = false;
   bool _isLoading = true;
   bool _noActiveTrip = false;
+  /// Bumped by pull-to-refresh so the recent trips list reloads.
+  int _historyReload = 0;
   Map<String, dynamic>? _tripData;
   String? _currentTripId;
   String? _currentKidName;
@@ -740,9 +745,25 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
             ),
           ),
 
-          // Map
+          // Live trip on top, recent trips below; the page scrolls.
           Expanded(
-            child: _isLoading
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final liveHeight = _isLoading
+                    ? box.maxHeight
+                    : _noActiveTrip
+                        ? 280.0
+                        : (box.maxHeight * 0.95).clamp(540.0, 900.0);
+                return RefreshIndicator(
+                  color: const Color(0xFF1B3B69),
+                  onRefresh: () async => setState(() => _historyReload++),
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: liveHeight,
+                          child: _isLoading
                 ? const TrackingScreenSkeleton()
                 : _noActiveTrip
                     ? _buildNoActiveTripState()
@@ -760,6 +781,11 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
                           behavior: HitTestBehavior.translucent,
                           onPointerDown: (_) => _follow.userMoved(),
                           child: GoogleMap(
+                          // The map keeps its drags; the page scrolls elsewhere.
+                          gestureRecognizers: {
+                            Factory<OneSequenceGestureRecognizer>(
+                                () => EagerGestureRecognizer()),
+                          },
                           initialCameraPosition: CameraPosition(
                             target: _vanPosition,
                             zoom: 14,
@@ -883,6 +909,19 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen>
                       ),
                     ],
                   ),
+                        ),
+                      ),
+                      if (!_isLoading)
+                        SliverToBoxAdapter(
+                          child: RecentTripsSection(reloadSignal: _historyReload),
+                        ),
+                      SliverToBoxAdapter(
+                          child: SizedBox(height: 24 + navInset)),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
