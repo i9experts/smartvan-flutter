@@ -11,6 +11,8 @@ import '../../profile/screens/profile_screen.dart';
 import '../../../core/storage/token_storage.dart';
 import '../../chat/chat_api.dart';
 import '../../tracking/screens/parent_tracking_screen.dart';
+import '../../trips/trips_api.dart';
+import '../../trips/widgets/completed_trip_card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -33,6 +35,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   List<dynamic> _banners = [];
   /// Today's trips that are in progress for this parent's kids.
   List<dynamic> _activeTrips = [];
+  /// Today's finished trips (PKT) that carried this parent's kids.
+  List<CompletedTrip> _completedToday = [];
+  bool _completedFailed = false;
   bool _isLoading = true;
   double _avgRating = 0;
   int _ratingCount = 0;
@@ -65,7 +70,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void _selectTab(int index) {
     final backToHome = index == 0 && _currentIndex != 0;
     setState(() => _currentIndex = index);
-    if (backToHome) _loadActiveTrips();
+    if (backToHome) {
+      _loadActiveTrips();
+      _loadCompletedToday();
+    }
   }
 
   int _chatUnread = 0;
@@ -87,6 +95,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _loadAlerts(),
       _loadBanners(),
       _loadActiveTrips(),
+      _loadCompletedToday(),
       _loadRatingSummary(),
       _loadPendingRatings(),
     ]);
@@ -173,12 +182,106 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (response.statusCode == 200 && mounted) {
         final raw = response.data;
         final list = raw is Map ? raw['data'] : raw;
+        final before = _activeTrips.length;
         setState(() => _activeTrips = list is List ? list : []);
+        // A trip just ended: it belongs in "Today's completed trips" now.
+        if (_activeTrips.length < before) _loadCompletedToday();
       }
     } catch (_) {
       // Keep whatever is shown: a failed check must not blink the card away.
       debugPrint('Home: active trips check failed');
     }
+  }
+
+  Future<void> _loadCompletedToday() async {
+    try {
+      final page = await TripsApi.completed(scope: 'today', limit: 10);
+      // The list has no driver/van; the details do. A failed lookup just
+      // leaves that line off the card.
+      final trips = await Future.wait(page.items.map((t) async {
+        try {
+          return t.withDriver(await TripsApi.details(t.id));
+        } catch (_) {
+          return t;
+        }
+      }));
+      if (mounted) {
+        setState(() {
+          _completedToday = trips;
+          _completedFailed = false;
+        });
+      }
+    } catch (_) {
+      // Keep what is shown; only say so when there is nothing to show.
+      if (mounted) setState(() => _completedFailed = true);
+    }
+  }
+
+  Widget _buildCompletedToday() {
+    final rows = [
+      for (final t in _completedToday)
+        for (final c in t.children) (t, c),
+    ];
+    final empty = rows.isEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Today's completed trips",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1A2E),
+                fontFamily: 'Poppins',
+              ),
+            ),
+            TextButton(
+              onPressed: () => context.push('/trip-history'),
+              child: const Text(
+                'View all',
+                style: TextStyle(
+                  color: Color(0xFF1B3B69),
+                  fontSize: 13,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        if (empty)
+          Container(
+            padding: const EdgeInsets.all(20),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              _completedFailed
+                  ? "Couldn't load today's trips. Pull down to retry."
+                  : 'No completed trips today',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF8A94A6),
+                fontFamily: 'Poppins',
+              ),
+            ),
+          )
+        else
+          for (final (trip, child) in rows)
+            CompletedTripCard(
+              trip: trip,
+              child: child,
+              onTap: () =>
+                  context.push('/trip-details/${trip.id}?kid=${child.kidId}'),
+            ),
+        const SizedBox(height: 24),
+      ],
+    );
   }
 
   Future<void> _loadAlerts() async {
@@ -432,6 +535,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     _buildRateDriverBanner(),
                     const SizedBox(height: 24),
                   ],
+                  _buildCompletedToday(),
                   _buildAdBanner(),
                   const SizedBox(height: 24),
                   _buildRatingStatCard(),

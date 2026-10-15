@@ -19,6 +19,8 @@ import '../../features/kids/card/student_card_screen.dart';
 import '../../features/chat/screens/chat_screen.dart';
 import '../../features/chat/screens/conversations_screen.dart';
 import '../../features/rating/screens/rate_trip_screen.dart';
+import '../../features/trips/screens/trip_details_screen.dart';
+import '../../features/trips/screens/trip_history_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -105,6 +107,17 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => StudentCardScreen(
         kidId: state.pathParameters['kidId']!,
         kidName: state.uri.queryParameters['name'] ?? '',
+      ),
+    ),
+    GoRoute(
+      path: '/trip-history',
+      builder: (context, state) => const TripHistoryScreen(),
+    ),
+    GoRoute(
+      path: '/trip-details/:tripId',
+      builder: (context, state) => TripDetailsScreen(
+        tripId: state.pathParameters['tripId']!,
+        kidId: state.uri.queryParameters['kid'],
       ),
     ),
     GoRoute(
