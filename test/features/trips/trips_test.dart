@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartvan/core/network/api_service.dart';
 import 'package:smartvan/features/home/screens/home_screen.dart';
 import 'package:smartvan/features/trips/screens/trip_details_screen.dart';
+import 'package:smartvan/features/trips/widgets/completed_trip_card.dart';
 import 'package:smartvan/features/trips/widgets/recent_trips_section.dart';
 import 'package:smartvan/features/trips/trips_api.dart';
 
@@ -22,6 +23,13 @@ const _child = {
   'at': '2026-10-15T02:10:00.000Z',
 };
 
+const _child2 = {
+  'kidId': 'k2',
+  'name': 'Bilal',
+  'status': 'picked',
+  'at': '2026-10-15T02:20:00.000Z', // 7:20 AM PKT
+};
+
 Map<String, dynamic> _trip({bool full = false}) => {
       'id': 't1',
       'routeName': 'Gulshan Morning',
@@ -31,7 +39,7 @@ Map<String, dynamic> _trip({bool full = false}) => {
       'endedAt': '2026-10-15T02:41:00.000Z',
       'durationSeconds': 2460,
       'distanceMeters': 11840,
-      'children': [_child],
+      'children': [_child, _child2],
       if (full) ...{
         'driverName': 'Danish Tufail',
         'vanNumber': 'KHI-1234',
@@ -77,7 +85,8 @@ class _FakeApi implements HttpClientAdapter {
     } else if (path == '/kid/getKids') {
       body = {
         'data': [
-          {'_id': 'k1', 'homeLat': 24.89, 'homeLng': 67.06}
+          {'_id': 'k1', 'homeLat': 24.89, 'homeLng': 67.06},
+          {'_id': 'k2', 'homeLat': 24.88, 'homeLng': 67.04}
         ]
       };
     } else if (path == '/auth/getProfile') {
@@ -143,7 +152,11 @@ void main() {
       await tester.scrollUntilVisible(find.text("Today's completed trips"), 300,
           scrollable: find.byType(Scrollable).first);
       expect(find.text("Today's completed trips"), findsOneWidget);
+      // One card for the trip, with both children in it.
+      expect(find.byType(CompletedTripCard), findsOneWidget);
       expect(find.text('Ayesha'), findsOneWidget);
+      expect(find.text('Bilal'), findsOneWidget);
+      expect(find.textContaining('7:20 AM'), findsOneWidget);
       expect(find.textContaining('Danish Tufail'), findsOneWidget);
       expect(find.textContaining('KHI-1234'), findsOneWidget);
       expect(find.textContaining('7:10 AM'), findsOneWidget);
@@ -171,7 +184,7 @@ void main() {
     Future<void> openDetails(WidgetTester tester) async {
       await setBigView(tester);
       await tester.pumpWidget(const MaterialApp(
-          home: TripDetailsScreen(tripId: 't1', kidId: 'k1')));
+          home: TripDetailsScreen(tripId: 't1')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
     }
@@ -188,13 +201,16 @@ void main() {
       expect(find.text('41 min'), findsOneWidget);
       expect(find.text('11.8 km'), findsOneWidget);
       expect(find.text('7:10 AM'), findsOneWidget);
-      expect(find.text('Picked up'), findsOneWidget);
+      expect(find.text('7:20 AM'), findsOneWidget);
+      expect(find.text('Ayesha'), findsOneWidget);
+      expect(find.text('Bilal'), findsOneWidget);
+      expect(find.text('Picked up'), findsNWidgets(2));
       expect(find.textContaining('not recorded'), findsNothing);
 
       final map = tester.widget<GoogleMap>(find.byType(GoogleMap));
       expect(map.polylines.single.points.length, 3);
       expect(map.markers.map((m) => m.markerId.value),
-          containsAll(['start', 'end', 'stop', 'school']));
+          containsAll(['start', 'end', 'stop-k1', 'stop-k2', 'school']));
     });
 
     testWidgets('without a trail: no line, still the facts and a note',
@@ -206,7 +222,7 @@ void main() {
       final map = tester.widget<GoogleMap>(find.byType(GoogleMap));
       expect(map.polylines, isEmpty);
       expect(map.markers.map((m) => m.markerId.value),
-          containsAll(['stop', 'school']));
+          containsAll(['stop-k1', 'school']));
       expect(map.markers.map((m) => m.markerId.value),
           isNot(contains('start')));
     });
@@ -224,7 +240,9 @@ void main() {
     testWidgets('lists trips under their day', (tester) async {
       await open(tester);
       expect(find.text('Recent trips'), findsOneWidget);
+      expect(find.byType(CompletedTripCard), findsOneWidget);
       expect(find.text('Ayesha'), findsOneWidget);
+      expect(find.text('Bilal'), findsOneWidget);
       expect(
           find.text(dayLabel(
               DateTime.utc(2026, 10, 15, 2, 41), DateTime.now().toUtc())),

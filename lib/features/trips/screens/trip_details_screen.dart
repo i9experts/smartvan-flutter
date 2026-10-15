@@ -8,13 +8,11 @@ const _navy = Color(0xFF1B3B69);
 const _yellow = Color(0xFFFEC610);
 
 /// A finished trip: the route the van actually drove plus its facts.
-/// Read-only — no socket. [kidId] picks which of the parent's children
-/// gets the stop marker (all own children are listed regardless).
+/// Read-only — no socket. Shows every one of the parent's children on it.
 class TripDetailsScreen extends StatefulWidget {
-  const TripDetailsScreen({super.key, required this.tripId, this.kidId});
+  const TripDetailsScreen({super.key, required this.tripId});
 
   final String tripId;
-  final String? kidId;
 
   @override
   State<TripDetailsScreen> createState() => _TripDetailsScreenState();
@@ -23,7 +21,7 @@ class TripDetailsScreen extends StatefulWidget {
 class _TripDetailsScreenState extends State<TripDetailsScreen> {
   CompletedTrip? _trip;
   TripTrail _trail = const TripTrail([]);
-  LatLng? _stop;
+  Map<String, LatLng> _stops = {};
   String? _error;
   bool _loading = true;
   GoogleMapController? _map;
@@ -42,17 +40,16 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     try {
       final trip = await TripsApi.details(widget.tripId);
       // The trail and the stop are extras: the screen works without them.
-      final kidId = widget.kidId ??
-          (trip.children.isEmpty ? null : trip.children.first.kidId);
       final extras = await Future.wait<Object?>([
         TripsApi.trail(widget.tripId).catchError((_) => const TripTrail([])),
-        if (kidId != null) TripsApi.kidStop(kidId).catchError((_) => null),
+        TripsApi.kidStops({for (final c in trip.children) c.kidId})
+            .catchError((_) => <String, LatLng>{}),
       ]);
       if (!mounted) return;
       setState(() {
         _trip = trip;
         _trail = extras[0] as TripTrail;
-        _stop = extras.length > 1 ? extras[1] as LatLng? : null;
+        _stops = extras[1] as Map<String, LatLng>;
       });
     } catch (e) {
       if (mounted) setState(() => _error = ApiErrors.message(e));
@@ -63,7 +60,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
   List<LatLng> get _allPoints => [
         ..._trail.path,
-        if (_stop != null) _stop!,
+        ..._stops.values,
         if (_trip?.school != null) _trip!.school!.point,
       ];
 
@@ -93,12 +90,14 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
             infoWindow: const InfoWindow(title: 'Trip end')),
       },
-      if (_stop != null)
-        Marker(
-            markerId: const MarkerId('stop'),
-            position: _stop!,
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-            infoWindow: const InfoWindow(title: "Your child's stop")),
+      for (final c in _trip?.children ?? const <TripChild>[])
+        if (_stops[c.kidId] != null)
+          Marker(
+              markerId: MarkerId('stop-${c.kidId}'),
+              position: _stops[c.kidId]!,
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueGreen),
+              infoWindow: InfoWindow(title: "${c.name}'s stop")),
       if (_trip?.school != null)
         Marker(
             markerId: const MarkerId('school'),

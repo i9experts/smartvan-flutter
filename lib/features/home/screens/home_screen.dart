@@ -216,10 +216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildCompletedToday() {
-    final rows = [
-      for (final t in _completedToday)
-        for (final c in t.children) (t, c),
-    ];
+    final rows = _completedToday.where((t) => t.children.isNotEmpty).toList();
     // Nothing to show (no trip ended today, or the request failed): no section.
     if (rows.isEmpty) return const SizedBox.shrink();
     return Column(
@@ -251,12 +248,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ],
         ),
         const SizedBox(height: 4),
-        for (final (trip, child) in rows)
+        for (final trip in rows)
           CompletedTripCard(
             trip: trip,
-            child: child,
-            onTap: () =>
-                context.push('/trip-details/${trip.id}?kid=${child.kidId}'),
+            onTap: () => context.push('/trip-details/${trip.id}'),
           ),
         const SizedBox(height: 24),
       ],

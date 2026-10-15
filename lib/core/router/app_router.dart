@@ -110,10 +110,8 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/trip-details/:tripId',
-      builder: (context, state) => TripDetailsScreen(
-        tripId: state.pathParameters['tripId']!,
-        kidId: state.uri.queryParameters['kid'],
-      ),
+      builder: (context, state) =>
+          TripDetailsScreen(tripId: state.pathParameters['tripId']!),
     ),
     GoRoute(
       path: '/chats',

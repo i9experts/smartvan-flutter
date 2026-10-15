@@ -203,18 +203,22 @@ class TripsApi {
     return TripTrail(points);
   }
 
-  /// The saved home/pickup point of one of the parent's kids, if set.
-  static Future<LatLng?> kidStop(String kidId) async {
+  /// The saved home/pickup points of the parent's kids, by kid id.
+  static Future<Map<String, LatLng>> kidStops(Set<String> kidIds) async {
     final res = ApiErrors.ensureOk(await ApiService.get('/kid/getKids'));
     final raw = res.data;
-    final list = raw is List ? raw : (raw is Map ? (raw['data'] ?? raw['kids']) : null);
-    if (list is! List) return null;
+    final list =
+        raw is List ? raw : (raw is Map ? (raw['data'] ?? raw['kids']) : null);
+    final stops = <String, LatLng>{};
+    if (list is! List) return stops;
     for (final k in list.whereType<Map>()) {
-      if ((k['_id'] ?? k['id'])?.toString() != kidId) continue;
+      final id = (k['_id'] ?? k['id'])?.toString();
       final lat = (k['homeLat'] as num?)?.toDouble();
       final lng = (k['homeLng'] as num?)?.toDouble();
-      return lat != null && lng != null ? LatLng(lat, lng) : null;
+      if (id != null && kidIds.contains(id) && lat != null && lng != null) {
+        stops[id] = LatLng(lat, lng);
+      }
     }
-    return null;
+    return stops;
   }
 }

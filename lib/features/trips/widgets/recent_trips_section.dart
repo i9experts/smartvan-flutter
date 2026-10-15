@@ -64,13 +64,10 @@ class _RecentTripsSectionState extends State<RecentTripsSection> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now().toUtc();
-    final rows = [
-      for (final t in _trips)
-        for (final c in t.children) (t, c),
-    ];
+    final rows = _trips.where((t) => t.children.isNotEmpty).toList();
     final children = <Widget>[];
     String? lastDay;
-    for (final (trip, child) in rows) {
+    for (final trip in rows) {
       final day = dayLabel(trip.endedAt, now);
       if (day != lastDay) {
         lastDay = day;
@@ -85,9 +82,7 @@ class _RecentTripsSectionState extends State<RecentTripsSection> {
       }
       children.add(CompletedTripCard(
         trip: trip,
-        child: child,
-        onTap: () =>
-            context.push('/trip-details/${trip.id}?kid=${child.kidId}'),
+        onTap: () => context.push('/trip-details/${trip.id}'),
       ));
     }
 
