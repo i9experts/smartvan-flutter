@@ -140,6 +140,8 @@ void main() {
 
     testWidgets('shows the child, driver, van and times', (tester) async {
       await openHome(tester);
+      await tester.scrollUntilVisible(find.text("Today's completed trips"), 300,
+          scrollable: find.byType(Scrollable).first);
       expect(find.text("Today's completed trips"), findsOneWidget);
       expect(find.text('Ayesha'), findsOneWidget);
       expect(find.textContaining('Danish Tufail'), findsOneWidget);
@@ -149,18 +151,18 @@ void main() {
       await close(tester);
     });
 
-    testWidgets('says so when there are no trips today', (tester) async {
+    testWidgets('shows nothing when no trip ended today', (tester) async {
       api.emptyCompleted = true;
       await openHome(tester);
-      expect(find.text('No completed trips today'), findsOneWidget);
+      expect(find.text("Today's completed trips"), findsNothing);
+      expect(find.text('View all'), findsNothing);
       await close(tester);
     });
 
-    testWidgets('says so when the request fails', (tester) async {
+    testWidgets('shows nothing when the request fails', (tester) async {
       api.completedFails = true;
       await openHome(tester);
-      expect(find.textContaining("Couldn't load today's trips"),
-          findsOneWidget);
+      expect(find.text("Today's completed trips"), findsNothing);
       await close(tester);
     });
   });

@@ -37,7 +37,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   List<dynamic> _activeTrips = [];
   /// Today's finished trips (PKT) that carried this parent's kids.
   List<CompletedTrip> _completedToday = [];
-  bool _completedFailed = false;
   bool _isLoading = true;
   double _avgRating = 0;
   int _ratingCount = 0;
@@ -208,12 +207,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (mounted) {
         setState(() {
           _completedToday = trips;
-          _completedFailed = false;
         });
       }
     } catch (_) {
-      // Keep what is shown; only say so when there is nothing to show.
-      if (mounted) setState(() => _completedFailed = true);
+      // Keep whatever is shown.
+      debugPrint('Home: completed trips check failed');
     }
   }
 
@@ -222,7 +220,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       for (final t in _completedToday)
         for (final c in t.children) (t, c),
     ];
-    final empty = rows.isEmpty;
+    // Nothing to show (no trip ended today, or the request failed): no section.
+    if (rows.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -252,33 +251,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ],
         ),
         const SizedBox(height: 4),
-        if (empty)
-          Container(
-            padding: const EdgeInsets.all(20),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              _completedFailed
-                  ? "Couldn't load today's trips. Pull down to retry."
-                  : 'No completed trips today',
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF8A94A6),
-                fontFamily: 'Poppins',
-              ),
-            ),
-          )
-        else
-          for (final (trip, child) in rows)
-            CompletedTripCard(
-              trip: trip,
-              child: child,
-              onTap: () =>
-                  context.push('/trip-details/${trip.id}?kid=${child.kidId}'),
-            ),
+        for (final (trip, child) in rows)
+          CompletedTripCard(
+            trip: trip,
+            child: child,
+            onTap: () =>
+                context.push('/trip-details/${trip.id}?kid=${child.kidId}'),
+          ),
         const SizedBox(height: 24),
       ],
     );
@@ -535,7 +514,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     _buildRateDriverBanner(),
                     const SizedBox(height: 24),
                   ],
-                  _buildCompletedToday(),
                   _buildAdBanner(),
                   const SizedBox(height: 24),
                   _buildRatingStatCard(),
@@ -608,6 +586,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   const SizedBox(height: 12),
                   _buildAlertsSection(),
                   const SizedBox(height: 24),
+                  _buildCompletedToday(),
                 ],
               ),
             ),
