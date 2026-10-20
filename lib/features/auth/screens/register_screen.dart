@@ -3,7 +3,9 @@ import '../../../core/widgets/auth_backdrop.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/gestures.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/widgets/html_asset_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -14,6 +16,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _nameController = TextEditingController();
+  final _schoolNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -22,10 +25,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _obscureConfirm = true;
   bool _isLoading = false;
   bool _agreedToTerms = false;
+  late final TapGestureRecognizer _termsTap = TapGestureRecognizer()
+    ..onTap = () => _openDoc('Terms & Conditions', 'terms_conditions');
+  late final TapGestureRecognizer _privacyTap = TapGestureRecognizer()
+    ..onTap = () => _openDoc('Privacy Policy', 'privacy_policy');
+
+  void _openDoc(String title, String file) {
+    FocusScope.of(context).unfocus();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            HtmlAssetScreen(title: title, assetPath: 'assets/html/$file.html'),
+      ),
+    );
+  }
 
   @override
   void dispose() {
+    _termsTap.dispose();
+    _privacyTap.dispose();
     _nameController.dispose();
+    _schoolNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
@@ -35,6 +55,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _register() async {
     if (_nameController.text.isEmpty ||
+        _schoolNameController.text.trim().isEmpty ||
         _emailController.text.isEmpty ||
         _phoneController.text.isEmpty ||
         _passwordController.text.isEmpty ||
@@ -58,6 +79,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     try {
       final response = await ApiService.post('/auth/registeruser', {
         'fullname': _nameController.text.trim(),
+        'schoolName': _schoolNameController.text.trim(),
         'email': _emailController.text.trim(),
         'phoneNo': _phoneController.text.trim(),
         'password': _passwordController.text,
@@ -103,70 +125,113 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
+  // Natural (scale 1) height of the form: 6 fields with label + gaps, the
+  // terms row, button and sign-in link. Used to pick a scale that fits.
+  static double _formHeight(double s) {
+    final fieldH =
+        s >= 1 ? 56.0 : 2 * 16 * s + 1.6 * 14 * (s < 0.85 ? 0.85 : s);
+    final labelH = 20 * s;
+    final field = labelH + 8 * s + fieldH + 16 * s;
+    return 6 * field + 48 * s + 8 * s + 52 * s + 16 * s + 22 * s + 16;
+  }
+
+  /// Largest scale (down to 0.5) at which the whole form fits the screen
+  /// without scrolling.
+  double _fitScale(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    // size excludes the keyboard, so the layout doesn't jump when it opens.
+    final avail = mq.size.height - mq.padding.top - mq.padding.bottom - 56 - 24;
+    for (var s = 1.0; s > 0.5; s -= 0.05) {
+      if (_formHeight(s) <= avail) return s;
+    }
+    return 0.5;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final s = _fitScale(context);
+    final gap = 16 * s;
     return Scaffold(
       body: AuthBackdrop(
         child: Stack(
           children: [
             AuthSheet(
+              topPadding: 24,
+              bottomPadding: 8,
               children: [
                 // Full Name
-                _buildLabel('Full Name'),
-                const SizedBox(height: 8),
+                _buildLabel(s, 'Full Name'),
+                SizedBox(height: 8 * s),
                 _buildTextField(
+                  s,
                   controller: _nameController,
                   hint: 'Enter your full name',
                   icon: Icons.person_outlined,
                   keyboardType: TextInputType.name,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: gap),
+
+                // School Name
+                _buildLabel(s, 'School Name'),
+                SizedBox(height: 8 * s),
+                _buildTextField(
+                  s,
+                  controller: _schoolNameController,
+                  hint: "Your child's school name",
+                  icon: Icons.school_outlined,
+                  keyboardType: TextInputType.name,
+                ),
+                SizedBox(height: gap),
 
                 // Email
-                _buildLabel('Email Address'),
-                const SizedBox(height: 8),
+                _buildLabel(s, 'Email Address'),
+                SizedBox(height: 8 * s),
                 _buildTextField(
+                  s,
                   controller: _emailController,
                   hint: 'Enter your email',
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: gap),
 
                 // Phone
-                _buildLabel('Phone Number'),
-                const SizedBox(height: 8),
+                _buildLabel(s, 'Phone Number'),
+                SizedBox(height: 8 * s),
                 _buildTextField(
+                  s,
                   controller: _phoneController,
                   hint: 'Enter your phone number',
                   icon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: gap),
 
                 // Password
-                _buildLabel('Password'),
-                const SizedBox(height: 8),
+                _buildLabel(s, 'Password'),
+                SizedBox(height: 8 * s),
                 _buildPasswordField(
+                  s,
                   controller: _passwordController,
                   hint: 'Create a password',
                   obscure: _obscurePassword,
                   onToggle: () =>
                       setState(() => _obscurePassword = !_obscurePassword),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: gap),
 
                 // Confirm Password
-                _buildLabel('Confirm Password'),
-                const SizedBox(height: 8),
+                _buildLabel(s, 'Confirm Password'),
+                SizedBox(height: 8 * s),
                 _buildPasswordField(
+                  s,
                   controller: _confirmPasswordController,
                   hint: 'Confirm your password',
                   obscure: _obscureConfirm,
                   onToggle: () =>
                       setState(() => _obscureConfirm = !_obscureConfirm),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8 * s),
 
                 // Terms & Conditions
                 Row(
@@ -187,9 +252,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       child: Padding(
                         padding: const EdgeInsets.only(top: 12),
                         child: RichText(
-                          text: const TextSpan(
+                          text: TextSpan(
                             text: 'I agree to the ',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 13,
                               fontFamily: 'Poppins',
@@ -197,17 +262,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             children: [
                               TextSpan(
                                 text: 'Terms & Conditions',
-                                style: TextStyle(
+                                recognizer: _termsTap,
+                                style: const TextStyle(
                                   color: Color(0xFFFEC610),
                                   fontWeight: FontWeight.w600,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Color(0xFFFEC610),
                                 ),
                               ),
-                              TextSpan(text: ' and '),
+                              const TextSpan(text: ' and '),
                               TextSpan(
                                 text: 'Privacy Policy',
-                                style: TextStyle(
+                                recognizer: _privacyTap,
+                                style: const TextStyle(
                                   color: Color(0xFFFEC610),
                                   fontWeight: FontWeight.w600,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Color(0xFFFEC610),
                                 ),
                               ),
                             ],
@@ -217,12 +288,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: gap),
 
                 // Register Button
                 SizedBox(
                   width: double.infinity,
-                  height: 52,
+                  height: 52 * s,
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _register,
                     style: ElevatedButton.styleFrom(
@@ -251,7 +322,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: gap),
 
                 // Login Link
                 Row(
@@ -311,11 +382,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  Widget _buildLabel(String text) {
+  Widget _buildLabel(double s, String text) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 13,
+      style: TextStyle(
+        fontSize: 13 * (s < 0.85 ? 0.85 : s),
         fontWeight: FontWeight.w600,
         color: Colors.white,
         fontFamily: 'Poppins',
@@ -323,7 +394,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildTextField(
+    double s, {
     required TextEditingController controller,
     required String hint,
     required IconData icon,
@@ -334,10 +406,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       hint: hint,
       icon: icon,
       keyboardType: keyboardType,
+      scale: s,
     );
   }
 
-  Widget _buildPasswordField({
+  Widget _buildPasswordField(
+    double s, {
     required TextEditingController controller,
     required String hint,
     required bool obscure,
@@ -348,7 +422,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       hint: hint,
       icon: Icons.lock_outlined,
       obscureText: obscure,
-      suffix: authVisibilityToggle(obscured: obscure, onPressed: onToggle),
+      scale: s,
+      suffix: authVisibilityToggle(
+        obscured: obscure,
+        onPressed: onToggle,
+        compact: s < 1,
+      ),
     );
   }
 }

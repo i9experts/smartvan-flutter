@@ -19,6 +19,7 @@ class HtmlAssetScreen extends StatefulWidget {
 class _HtmlAssetScreenState extends State<HtmlAssetScreen> {
   late final WebViewController _controller;
   bool _isLoading = true;
+  bool _failed = false;
 
   @override
   void initState() {
@@ -42,8 +43,27 @@ class _HtmlAssetScreenState extends State<HtmlAssetScreen> {
             return NavigationDecision.navigate;
           },
         ),
-      )
-      ..loadFlutterAsset(widget.assetPath);
+      );
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _isLoading = true;
+      _failed = false;
+    });
+    try {
+      await _controller.loadFlutterAsset(widget.assetPath);
+    } catch (_) {
+      // Missing/unreadable asset: stop the spinner and offer a retry rather
+      // than leaving the screen loading forever.
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _failed = true;
+        });
+      }
+    }
   }
 
   @override
@@ -58,6 +78,16 @@ class _HtmlAssetScreenState extends State<HtmlAssetScreen> {
       body: Stack(
         children: [
           WebViewWidget(controller: _controller),
+          if (_failed)
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text("Couldn't load this page."),
+                  TextButton(onPressed: _load, child: const Text('Retry')),
+                ],
+              ),
+            ),
           if (_isLoading) const Center(child: CircularProgressIndicator()),
         ],
       ),

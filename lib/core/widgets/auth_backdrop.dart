@@ -38,9 +38,16 @@ class AuthBackdrop extends StatelessWidget {
 /// Bottom-anchored form area: wraps its content, fades from the photo into
 /// navy so text and fields stay readable, and scrolls when space runs out.
 class AuthSheet extends StatelessWidget {
-  const AuthSheet({super.key, required this.children});
+  const AuthSheet({
+    super.key,
+    required this.children,
+    this.topPadding = 48,
+    this.bottomPadding = 16,
+  });
 
   final List<Widget> children;
+  final double topPadding;
+  final double bottomPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -57,10 +64,10 @@ class AuthSheet extends StatelessWidget {
             stops: [0, 0.22, 0.45],
           ),
         ),
-        padding: const EdgeInsets.only(top: 48),
+        padding: EdgeInsets.only(top: topPadding),
         child: ListView(
           shrinkWrap: true,
-          padding: EdgeInsets.fromLTRB(24, 0, 24, 16 + bottomInset),
+          padding: EdgeInsets.fromLTRB(24, 0, 24, bottomPadding + bottomInset),
           children: children,
         ),
       ),
@@ -78,8 +85,12 @@ class AuthTextField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
     this.suffix,
+    this.scale = 1,
   });
 
+  /// 1 = regular size; below 1 shrinks padding and text so more fields fit
+  /// on short screens.
+  final double scale;
   final TextEditingController controller;
   final String hint;
   final IconData icon;
@@ -94,28 +105,35 @@ class AuthTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: color, width: width),
         );
+    final compact = scale < 1;
+    final fontSize = 14 * (scale < 0.85 ? 0.85 : scale);
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
       cursorColor: const Color(0xFFFEC610),
-      style: const TextStyle(
-        fontSize: 14,
+      style: TextStyle(
+        fontSize: fontSize,
         color: Colors.white,
         fontFamily: 'Poppins',
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(
+        hintStyle: TextStyle(
           color: Colors.white54,
-          fontSize: 14,
+          fontSize: fontSize,
           fontFamily: 'Poppins',
         ),
-        prefixIcon: Icon(icon, color: Colors.white70, size: 20),
+        prefixIcon: Icon(icon, color: Colors.white70, size: 20 * scale),
+        prefixIconConstraints:
+            compact ? const BoxConstraints(minWidth: 44, minHeight: 0) : null,
         suffixIcon: suffix,
+        suffixIconConstraints:
+            compact ? const BoxConstraints(minWidth: 44, minHeight: 0) : null,
+        isDense: compact,
         filled: false,
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            EdgeInsets.symmetric(horizontal: 16, vertical: 16 * scale),
         border: border(Colors.white38),
         enabledBorder: border(Colors.white38),
         focusedBorder: border(const Color(0xFFFEC610), 1.6),
@@ -128,13 +146,17 @@ class AuthTextField extends StatelessWidget {
 Widget authVisibilityToggle({
   required bool obscured,
   required VoidCallback onPressed,
+  bool compact = false,
 }) {
   return IconButton(
     icon: Icon(
       obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
       color: Colors.white70,
-      size: 20,
+      size: compact ? 18 : 20,
     ),
+    padding: compact ? EdgeInsets.zero : const EdgeInsets.all(8),
+    constraints:
+        compact ? const BoxConstraints(minWidth: 44, minHeight: 32) : null,
     onPressed: onPressed,
   );
 }
