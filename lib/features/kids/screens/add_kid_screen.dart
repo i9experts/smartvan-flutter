@@ -37,6 +37,13 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
   String _selectedGender = 'male';
   String? _selectedGrade;
 
+  // Fallback for a school that hasn't onboarded on SmartVan yet — the
+  // dropdown only lists real, onboarded schools, so without this a parent
+  // in that situation could never add a child at all. Recorded as a
+  // prospect lead (see Parent Intelligence) instead of a real school link.
+  bool _schoolNotListed = false;
+  final _prospectSchoolNameController = TextEditingController();
+
   double? _homeLat;
   double? _homeLng;
 
@@ -51,6 +58,7 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
     _nameController.dispose();
     _ageController.dispose();
     _addressController.dispose();
+    _prospectSchoolNameController.dispose();
     super.dispose();
   }
 
@@ -105,7 +113,12 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
       _showError('Please enter child\'s name');
       return;
     }
-    if (_selectedSchoolId == null) {
+    if (_schoolNotListed) {
+      if (_prospectSchoolNameController.text.trim().isEmpty) {
+        _showError("Please enter your child's school name");
+        return;
+      }
+    } else if (_selectedSchoolId == null) {
       _showError('Please select a school');
       return;
     }
@@ -133,7 +146,10 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
       // entire body.
       final response = await ApiService.post('/kid/addKid', {
         'fullname': _nameController.text.trim(),
-        'schoolId': _selectedSchoolId,
+        if (_schoolNotListed)
+          'prospectSchoolName': _prospectSchoolNameController.text.trim()
+        else
+          'schoolId': _selectedSchoolId,
         'grade': _selectedGrade,
         'age': _ageController.text.trim(),
         'gender': _selectedGender,
@@ -147,7 +163,11 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Kid added successfully!'),
+              content: Text(
+                _schoolNotListed
+                    ? "Noted! Tracking will activate once your child's school joins SmartVan."
+                    : 'Kid added successfully!',
+              ),
               backgroundColor: const Color(0xFF27AE60),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -298,10 +318,57 @@ class _AddKidScreenState extends ConsumerState<AddKidScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // School Dropdown
+                  // School Dropdown (or free-text fallback)
                   _buildLabel('Select School *'),
                   const SizedBox(height: 8),
-                  _buildSchoolDropdown(),
+                  if (_schoolNotListed)
+                    _buildTextField(
+                      controller: _prospectSchoolNameController,
+                      hint: "Enter your child's school name",
+                      icon: Icons.school_outlined,
+                    )
+                  else
+                    _buildSchoolDropdown(),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _schoolNotListed = !_schoolNotListed;
+                      if (_schoolNotListed) {
+                        _selectedSchoolId = null;
+                        _selectedSchoolName = null;
+                      }
+                    }),
+                    child: Text(
+                      _schoolNotListed
+                          ? 'Select from the list instead'
+                          : "Can't find your school? Tap here",
+                      style: const TextStyle(
+                        color: Color(0xFF1B3B69),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ),
+                  if (_schoolNotListed) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEC610).withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        "We'll note your interest. Live van tracking unlocks "
+                        "once your child's school signs up for SmartVan.",
+                        style: TextStyle(
+                          color: Color(0xFF8A6500),
+                          fontSize: 12,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
 
                   // Grade

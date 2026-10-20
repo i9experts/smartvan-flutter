@@ -13,6 +13,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _nameController = TextEditingController();
+  final _schoolNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -25,6 +26,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _schoolNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
@@ -57,6 +59,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     try {
       final response = await ApiService.post('/auth/registeruser', {
         'fullname': _nameController.text.trim(),
+        if (_schoolNameController.text.trim().isNotEmpty)
+          'schoolName': _schoolNameController.text.trim(),
         'email': _emailController.text.trim(),
         'phoneNo': _phoneController.text.trim(),
         'password': _passwordController.text,
@@ -184,6 +188,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           hint: 'Enter your full name',
                           icon: Icons.person_outlined,
                           keyboardType: TextInputType.name,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // School Name — free text, not validated against any
+                        // onboarded school. Captured so super admin can see
+                        // demand from families whose school hasn't joined
+                        // SmartVan yet (see Parent Intelligence).
+                        _buildLabel('School Name'),
+                        const SizedBox(height: 8),
+                        _buildTextField(
+                          controller: _schoolNameController,
+                          hint: "Your child's school name",
+                          icon: Icons.school_outlined,
+                          keyboardType: TextInputType.text,
                         ),
                         const SizedBox(height: 16),
 
